@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>知识库编辑器</title>
-<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@toast-ui/editor@3/dist/toastui-editor.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;display:flex;flex-direction:column}
@@ -88,7 +88,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
   </div>
 </div>
 
-<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@toast-ui/editor@3/dist/toastui-editor-all.min.js"></script>
 <script>
 var CLIENT_ID = 'Ov23ctCfpMxGeAINGXGW';
 var REDIRECT = 'https://archercool.github.io/wiki-editor/callback.html';
@@ -228,6 +228,10 @@ function closeModal() { document.getElementById('file-modal').style.display = 'n
 
 // ====== 初始化 ======
 function initEditor() {
+  if (typeof toastui === 'undefined') {
+    document.getElementById('editor-area').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c53030;font-size:15px"><p>编辑器加载失败，请刷新页面重试</p></div>';
+    return;
+  }
   var Editor = toastui.Editor;
   editor = new Editor({
     el: document.getElementById('editor-area'),
