@@ -82,11 +82,12 @@
                   groups[cat].push({ name: name, path: f.path });
                 }
               });
-              var html = '<ul class="sidebar-nav"><li><a href="/">首页</a></li>';
+              var html = '<ul class="sidebar-nav"><li><a href="#/">首页</a></li>';
               Object.keys(groups).sort().forEach(function(cat) {
                 html += '<li><p class="sidebar-title">' + cat + '</p><ul>';
                 groups[cat].forEach(function(a) {
-                  html += '<li><a href="' + a.path + '">' + a.name + '</a></li>';
+                  var link = '#/' + a.path.replace('.md', '');
+                  html += '<li><a href="' + link + '">' + a.name + '</a></li>';
                 });
                 html += '</ul></li>';
               });
