@@ -6,43 +6,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
   <style>
-    /* 编辑按钮样式 */
-    .edit-btn {
+    /* 悬浮按钮容器 */
+    .fab-container {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #0366d6;
-      color: white;
-      border: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+    }
+    /* 通用按钮样式 */
+    .fab-btn {
       width: 56px;
       height: 56px;
       border-radius: 50%;
+      border: none;
       font-size: 24px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(3, 102, 214, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       transition: all 0.2s;
-      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .edit-btn:hover {
-      background: #0256b9;
+    .fab-btn:hover {
       transform: scale(1.1);
     }
-    .edit-btn svg {
+    .fab-btn svg {
       width: 24px;
       height: 24px;
       fill: currentColor;
+    }
+    /* 编辑按钮 */
+    .edit-btn {
+      background: #0366d6;
+      color: white;
+    }
+    .edit-btn:hover {
+      background: #0256b9;
+    }
+    /* 新建按钮 */
+    .new-btn {
+      background: #28a745;
+      color: white;
+    }
+    .new-btn:hover {
+      background: #22863a;
     }
   </style>
 </head>
 <body>
   <div id="app">加载中...</div>
   
-  <!-- 编辑按钮 -->
-  <button class="edit-btn" id="edit-btn" title="编辑此页面">
-    <svg viewBox="0 0 24 24">
-      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-    </svg>
-  </button>
+  <!-- 悬浮按钮组 -->
+  <div class="fab-container">
+    <!-- 新建文章按钮 -->
+    <button class="fab-btn new-btn" id="new-btn" title="新建文章">
+      <svg viewBox="0 0 24 24">
+        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+      </svg>
+    </button>
+    <!-- 编辑按钮 -->
+    <button class="fab-btn edit-btn" id="edit-btn" title="编辑此页面">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+      </svg>
+    </button>
+  </div>
 
   <script>
     window.$docsify = {
@@ -64,6 +95,11 @@
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
   
   <script>
+    // 新建文章按钮功能
+    document.getElementById('new-btn').addEventListener('click', function() {
+      window.location.href = 'edit.html?new=true';
+    });
+
     // 编辑按钮功能
     document.getElementById('edit-btn').addEventListener('click', function() {
       // 获取当前页面路径
@@ -90,8 +126,6 @@
         editBtn.style.display = 'none';
       } else {
         editBtn.style.display = 'flex';
-        editBtn.style.alignItems = 'center';
-        editBtn.style.justifyContent = 'center';
       }
     }
 

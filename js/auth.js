@@ -4,19 +4,31 @@
 const Auth = {
   TOKEN_KEY: 'wiki_editor_token',
   USER_KEY: 'wiki_editor_user',
+  REMEMBER_KEY: 'wiki_editor_remember',
 
   /**
-   * 存储 Token 到 sessionStorage
+   * 存储 Token
+   * @param {boolean} remember - 是否持久化存储
    */
-  storeToken(token) {
+  storeToken(token, remember = false) {
+    // 总是存到 sessionStorage
     sessionStorage.setItem(this.TOKEN_KEY, token);
+    
+    // 如果选择记住，也存到 localStorage
+    if (remember) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.REMEMBER_KEY, 'true');
+    } else {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REMEMBER_KEY);
+    }
   },
 
   /**
-   * 获取存储的 Token
+   * 获取存储的 Token（优先从 sessionStorage，其次 localStorage）
    */
   getToken() {
-    return sessionStorage.getItem(this.TOKEN_KEY);
+    return sessionStorage.getItem(this.TOKEN_KEY) || localStorage.getItem(this.TOKEN_KEY);
   },
 
   /**
@@ -25,6 +37,8 @@ const Auth = {
   clearToken() {
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REMEMBER_KEY);
   },
 
   /**
@@ -32,6 +46,13 @@ const Auth = {
    */
   isAuthenticated() {
     return !!this.getToken();
+  },
+
+  /**
+   * 检查是否设置了记住
+   */
+  isRemembered() {
+    return localStorage.getItem(this.REMEMBER_KEY) === 'true';
   },
 
   /**
@@ -89,6 +110,10 @@ const Auth = {
           </p>
           <input type="password" class="auth-token-input" 
                  placeholder="ghp_xxxxxxxxxxxx" autofocus>
+          <label class="remember-label">
+            <input type="checkbox" class="remember-checkbox"> 记住我
+            <small>（在当前浏览器中保存 Token）</small>
+          </label>
           <div class="auth-error" style="display: none;"></div>
         </div>
         <div class="auth-modal-footer">
@@ -101,10 +126,16 @@ const Auth = {
     document.body.appendChild(modal);
 
     const tokenInput = modal.querySelector('.auth-token-input');
+    const rememberCheckbox = modal.querySelector('.remember-checkbox');
     const submitBtn = modal.querySelector('.auth-submit-btn');
     const cancelBtn = modal.querySelector('.auth-cancel-btn');
     const closeBtn = modal.querySelector('.auth-modal-close');
     const errorDiv = modal.querySelector('.auth-error');
+
+    // 如果之前设置了记住，预勾选
+    if (this.isRemembered()) {
+      rememberCheckbox.checked = true;
+    }
 
     const closeModal = () => modal.remove();
 
@@ -122,7 +153,7 @@ const Auth = {
       const result = await this.validateToken(token);
 
       if (result.valid) {
-        this.storeToken(token);
+        this.storeToken(token, rememberCheckbox.checked);
         closeModal();
         if (onSuccess) onSuccess(result.user);
       } else {

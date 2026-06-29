@@ -316,37 +316,97 @@ const Editor = {
   /**
    * 显示路径选择器（新建文章时）
    */
-  showPathSelector() {
+  async showPathSelector() {
     const app = document.getElementById('app');
+    
+    // 获取现有目录结构
+    let categories = ['AI', '产品优化', '编程', '工具'];
+    try {
+      const files = await GitHubAPI.listFiles('wiki');
+      const dirs = files.filter(f => f.type === 'dir').map(f => f.name);
+      if (dirs.length > 0) {
+        categories = dirs;
+      }
+    } catch (e) {
+      console.log('使用默认分类');
+    }
+
+    const categoryOptions = categories.map(c => 
+      `<option value="${c}">${c}</option>`
+    ).join('');
+
     app.innerHTML = `
       <div class="path-selector">
         <h3>新建文章</h3>
-        <div class="path-input-group">
-          <label>文件路径：</label>
-          <input type="text" id="path-input" placeholder="例如: wiki/AI/新概念.md">
+        <div class="path-form">
+          <div class="form-group">
+            <label>选择分类</label>
+            <select id="category-select" class="form-select">
+              ${categoryOptions}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>文章标题</label>
+            <input type="text" id="title-input" class="form-input" 
+                   placeholder="例如: 机器学习基础" autofocus>
+          </div>
+          <div class="form-group">
+            <label>预览路径</label>
+            <div id="preview-path" class="preview-path">wiki/AI/机器学习基础.md</div>
+          </div>
+          <div class="form-actions">
+            <a href="index.html" class="secondary-btn">取消</a>
+            <button id="create-btn" class="primary-btn">创建文章</button>
+          </div>
         </div>
-        <button id="create-btn" class="primary-btn">创建</button>
       </div>
     `;
 
+    const categorySelect = document.getElementById('category-select');
+    const titleInput = document.getElementById('title-input');
+    const previewPath = document.getElementById('preview-path');
     const createBtn = document.getElementById('create-btn');
-    const pathInput = document.getElementById('path-input');
 
-    createBtn.addEventListener('click', () => {
-      const path = pathInput.value.trim();
-      if (path) {
-        this.currentPath = path;
-        this.init();
+    // 更新预览路径
+    const updatePreview = () => {
+      const category = categorySelect.value;
+      const title = titleInput.value.trim() || '新文章';
+      previewPath.textContent = `wiki/${category}/${title}.md`;
+    };
+
+    categorySelect.addEventListener('change', updatePreview);
+    titleInput.addEventListener('input', updatePreview);
+    updatePreview();
+
+    // 创建文章
+    const handleCreate = () => {
+      const category = categorySelect.value;
+      const title = titleInput.value.trim();
+      
+      if (!title) {
+        alert('请输入文章标题');
+        return;
       }
+
+      const path = `wiki/${category}/${title}.md`;
+      this.currentPath = path;
+      
+      // 隐藏选择器，显示编辑器
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('editor-container').style.display = 'flex';
+      
+      // 初始化编辑器
+      this.initVditor('');
+      this.updatePathDisplay();
+      this.bindEvents();
+    };
+
+    createBtn.addEventListener('click', handleCreate);
+    titleInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleCreate();
     });
 
-    pathInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        createBtn.click();
-      }
-    });
-
-    pathInput.focus();
+    titleInput.focus();
   },
 
   /**
