@@ -31,11 +31,17 @@
   <div id="login-page">
     <div class="login-box">
       <h2>知识库编辑器</h2>
-      <p>使用 GitHub 账号登录后即可编辑</p>
-      <button id="login-btn" class="github-btn">
+      <p>登录 GitHub 即可编辑知识库</p>
+      <button id="login-btn" class="github-btn" style="margin-bottom:12px">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         使用 GitHub 账号登录
       </button>
+      <div style="border-top:1px solid #eee;padding-top:12px;margin-top:12px">
+        <p style="font-size:13px;color:#999">或使用 Token 登录</p>
+        <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxx" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:13px;box-sizing:border-box">
+        <button id="token-btn" class="btn-save" style="width:100%;margin-top:8px;padding:8px">Token 登录</button>
+        <p style="font-size:12px;color:#999;margin-top:8px"><a href="https://github.com/settings/tokens" target="_blank">获取 Token</a>，需勾选 repo 权限</p>
+      </div>
     </div>
   </div>
 
@@ -128,8 +134,8 @@
         });
 
         if (resp.ok) { st.textContent = '已保存'; setTimeout(function(){ st.textContent = ''; }, 3000); }
-        else throw new Error();
-      } catch(e) { st.textContent = '失败'; alert('保存失败'); }
+        else { var e = await resp.json(); throw new Error(e.message || '保存失败'); }
+      } catch(e) { st.textContent = '失败'; alert('保存失败: ' + (e.message || '请检查 Token 权限')); }
     }
 
     async function loadFile(path) {
@@ -150,7 +156,16 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       var token = getToken();
-      if (!token) { document.getElementById('login-btn').onclick = login; return; }
+      if (!token) {
+        document.getElementById('login-btn').onclick = login;
+        document.getElementById('token-btn').onclick = function() {
+          var t = document.getElementById('token-input').value.trim();
+          if (!t) { alert('请输入 Token'); return; }
+          localStorage.setItem('wiki_editor_token', t);
+          window.location.reload();
+        };
+        return;
+      }
 
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('editor-page').style.display = 'flex';
