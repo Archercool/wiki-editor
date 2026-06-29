@@ -1,18 +1,24 @@
 /**
- * 认证模块 - 支持 GitHub OAuth Device Flow
+ * 认证模块 - 支持 Token 和 OAuth
  */
 const Auth = {
   CLIENT_ID: 'Iv23lib96sWmtpVWoZfE',
   TOKEN_KEY: 'wiki_editor_token',
   USER_KEY: 'wiki_editor_user',
-  DEVICE_CODE_KEY: 'wiki_device_code',
+  REMEMBER_KEY: 'wiki_editor_remember',
 
   /**
    * 存储 Token
    */
-  storeToken(token) {
+  storeToken(token, remember = true) {
     sessionStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem(this.TOKEN_KEY, token);
+    if (remember) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.REMEMBER_KEY, 'true');
+    } else {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.REMEMBER_KEY);
+    }
   },
 
   /**
@@ -28,8 +34,8 @@ const Auth = {
   clearToken() {
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);
-    sessionStorage.removeItem(this.DEVICE_CODE_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.REMEMBER_KEY);
   },
 
   /**
@@ -37,6 +43,13 @@ const Auth = {
    */
   isAuthenticated() {
     return !!this.getToken();
+  },
+
+  /**
+   * 检查是否设置了记住
+   */
+  isRemembered() {
+    return localStorage.getItem(this.REMEMBER_KEY) === 'true';
   },
 
   /**
@@ -71,100 +84,7 @@ const Auth = {
   },
 
   /**
-   * 启动 Device Flow 认证
-   */
-  async startDeviceFlow() {
-    try {
-      // 1. 请求 device code
-      const response = await fetch('https://github.com/login/device/code', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          client_id: this.CLIENT_ID,
-          scope: 'repo'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('请求 device code 失败');
-      }
-
-      const data = await response.json();
-      
-      // 存储 device code
-      sessionStorage.setItem(this.DEVICE_CODE_KEY, JSON.stringify(data));
-      
-      return {
-        success: true,
-        userCode: data.user_code,
-        verificationUri: data.verification_uri,
-        expiresIn: data.expires_in
-      };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  },
-
-  /**
-   * 轮询获取 Token
-   */
-  async pollForToken() {
-    const deviceCodeStr = sessionStorage.getItem(this.DEVICE_CODE_KEY);
-    if (!deviceCodeStr) {
-      return { success: false, error: '未找到 device code' };
-    }
-
-    const deviceData = JSON.parse(deviceCodeStr);
-
-    try {
-      const response = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          client_id: this.CLIENT_ID,
-          device_code: deviceData.device_code,
-          grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.access_token) {
-        // 成功获取 token
-        this.storeToken(data.access_token);
-        sessionStorage.removeItem(this.DEVICE_CODE_KEY);
-        return { success: true, token: data.access_token };
-      }
-
-      if (data.error) {
-        switch (data.error) {
-          case 'authorization_pending':
-            return { success: false, pending: true, message: '等待用户授权...' };
-          case 'slow_down':
-            return { success: false, pending: true, message: '请求过于频繁' };
-          case 'expired_token':
-            return { success: false, error: '授权码已过期，请重新开始' };
-          case 'access_denied':
-            return { success: false, error: '用户拒绝了授权' };
-          default:
-            return { success: false, error: data.error_description || '授权失败' };
-        }
-      }
-
-      return { success: false, error: '未知错误' };
-    } catch (error) {
-      return { success: false, error: '网络错误' };
-    }
-  },
-
-  /**
-   * 显示 OAuth 登录弹窗
+   * 显示登录弹窗
    */
   renderAuthModal(onSuccess) {
     const modal = document.createElement('div');
@@ -176,31 +96,45 @@ const Auth = {
           <button class="auth-modal-close">&times;</button>
         </div>
         <div class="auth-modal-body">
-          <div id="auth-step-1">
-            <p>点击下方按钮，跳转到 GitHub 授权页面</p>
-            <button id="start-oauth-btn" class="github-btn">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-              </svg>
-              使用 GitHub 账号登录
-            </button>
-          </div>
-          
-          <div id="auth-step-2" style="display: none;">
-            <p>请访问以下链接并输入验证码：</p>
-            <div class="auth-code-box">
-              <a id="auth-url" href="#" target="_blank" class="auth-url"></a>
-              <div class="auth-code" id="auth-code"></div>
+          <div id="auth-tabs">
+            <div class="auth-tab-buttons">
+              <button class="auth-tab-btn active" data-tab="token">Token 登录</button>
+              <button class="auth-tab-btn" data-tab="guide">获取教程</button>
             </div>
-            <p class="auth-hint">
-              <small>授权码将在 15 分钟后过期</small>
-            </p>
-            <div class="auth-status" id="auth-status">等待授权中...</div>
-          </div>
-
-          <div id="auth-step-error" style="display: none;">
-            <div class="auth-error" id="auth-error-msg"></div>
-            <button id="retry-btn" class="tool-btn" style="margin-top: 12px;">重试</button>
+            
+            <div class="auth-tab-content active" id="tab-token">
+              <p>输入你的 GitHub Personal Access Token</p>
+              <input type="password" class="auth-token-input" 
+                     placeholder="ghp_xxxxxxxxxxxx" autofocus>
+              <label class="remember-label">
+                <input type="checkbox" class="remember-checkbox" checked> 记住我
+              </label>
+              <div class="auth-error" style="display: none;"></div>
+              <button class="primary-btn auth-submit-btn" style="width: 100%; margin-top: 16px;">
+                登录
+              </button>
+            </div>
+            
+            <div class="auth-tab-content" id="tab-guide" style="display: none;">
+              <div class="guide-steps">
+                <p><strong>获取 Token 步骤：</strong></p>
+                <ol>
+                  <li>访问 <a href="https://github.com/settings/tokens" target="_blank">GitHub Token 页面</a></li>
+                  <li>点击 <strong>"Generate new token (classic)"</strong></li>
+                  <li>Note 填写：<code>wiki-editor</code></li>
+                  <li>Expiration 选择：<code>90 days</code></li>
+                  <li>勾选权限：<code>repo</code>（完整仓库权限）</li>
+                  <li>点击 <strong>"Generate token"</strong></li>
+                  <li>复制生成的 Token（只显示一次）</li>
+                </ol>
+                <p class="guide-note">
+                  <small>⚠️ Token 只显示一次，请妥善保存</small>
+                </p>
+              </div>
+              <button class="primary-btn" onclick="window.open('https://github.com/settings/tokens', '_blank')" style="width: 100%;">
+                打开 GitHub Token 页面
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -208,76 +142,78 @@ const Auth = {
 
     document.body.appendChild(modal);
 
-    // 绑定事件
-    const startBtn = modal.querySelector('#start-oauth-btn');
+    // Tab 切换
+    const tabBtns = modal.querySelectorAll('.auth-tab-btn');
+    const tabContents = modal.querySelectorAll('.auth-tab-content');
+    
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => {
+          c.classList.remove('active');
+          c.style.display = 'none';
+        });
+        btn.classList.add('active');
+        const tabId = 'tab-' + btn.dataset.tab;
+        document.getElementById(tabId).style.display = 'block';
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+
+    const tokenInput = modal.querySelector('.auth-token-input');
+    const submitBtn = modal.querySelector('.auth-submit-btn');
     const closeBtn = modal.querySelector('.auth-modal-close');
-    const retryBtn = modal.querySelector('#retry-btn');
+    const errorDiv = modal.querySelector('.auth-error');
+    const rememberCheckbox = modal.querySelector('.remember-checkbox');
+
+    // 如果之前设置了记住
+    if (this.isRemembered()) {
+      rememberCheckbox.checked = true;
+    }
+
     const closeModal = () => modal.remove();
 
-    startBtn.addEventListener('click', async () => {
-      startBtn.disabled = true;
-      startBtn.textContent = '请求中...';
-
-      const result = await this.startDeviceFlow();
-
-      if (result.success) {
-        // 显示授权码
-        modal.querySelector('#auth-step-1').style.display = 'none';
-        modal.querySelector('#auth-step-2').style.display = 'block';
-        modal.querySelector('#auth-url').textContent = result.verificationUri;
-        modal.querySelector('#auth-url').href = result.verificationUri;
-        modal.querySelector('#auth-code').textContent = result.userCode;
-
-        // 复制到剪贴板
-        navigator.clipboard.writeText(result.userCode).catch(() => {});
-
-        // 开始轮询
-        this.startPolling(onSuccess, modal);
-      } else {
-        modal.querySelector('#auth-step-1').style.display = 'none';
-        modal.querySelector('#auth-step-error').style.display = 'block';
-        modal.querySelector('#auth-error-msg').textContent = result.error;
+    const handleSubmit = async () => {
+      const token = tokenInput.value.trim();
+      if (!token) {
+        errorDiv.textContent = '请输入 Token';
+        errorDiv.style.display = 'block';
+        return;
       }
-    });
 
-    closeBtn.addEventListener('click', closeModal);
-    retryBtn.addEventListener('click', () => {
-      modal.remove();
-      this.renderAuthModal(onSuccess);
-    });
+      if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+        errorDiv.textContent = 'Token 格式不正确，应以 ghp_ 或 github_pat_ 开头';
+        errorDiv.style.display = 'block';
+        return;
+      }
 
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-  },
+      submitBtn.disabled = true;
+      submitBtn.textContent = '验证中...';
+      errorDiv.style.display = 'none';
 
-  /**
-   * 开始轮询 Token
-   */
-  startPolling(onSuccess, modal) {
-    const statusEl = modal.querySelector('#auth-status');
-    const interval = 5000; // 5秒轮询一次
-    
-    const poll = async () => {
-      const result = await this.pollForToken();
+      const result = await this.validateToken(token);
 
-      if (result.success) {
-        // 成功
-        modal.remove();
-        const user = await this.validateToken(result.token);
-        if (onSuccess) onSuccess(user.user);
-      } else if (result.pending) {
-        // 继续等待
-        statusEl.textContent = result.message || '等待授权中...';
-        setTimeout(poll, interval);
+      if (result.valid) {
+        this.storeToken(token, rememberCheckbox.checked);
+        closeModal();
+        if (onSuccess) onSuccess(result.user);
       } else {
-        // 错误
-        modal.querySelector('#auth-step-2').style.display = 'none';
-        modal.querySelector('#auth-step-error').style.display = 'block';
-        modal.querySelector('#auth-error-msg').textContent = result.error;
+        errorDiv.textContent = result.error;
+        errorDiv.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登录';
       }
     };
 
-    setTimeout(poll, interval);
+    submitBtn.addEventListener('click', handleSubmit);
+    tokenInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    tokenInput.focus();
   }
 };
