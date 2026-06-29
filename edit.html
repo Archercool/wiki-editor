@@ -171,20 +171,32 @@
         return;
       }
 
-      document.getElementById('login-page').style.display = 'none';
-      document.getElementById('editor-page').style.display = 'flex';
+      // 验证 Token 并进入编辑模式
+      fetch('https://api.github.com/user', {
+        headers: { 'Authorization': 'token ' + token }
+      }).then(function(r) {
+        if (!r.ok) {
+          localStorage.removeItem('wiki_editor_token');
+          sessionStorage.removeItem('wiki_editor_token');
+          window.location.reload();
+          return;
+        }
 
-      var params = new URLSearchParams(window.location.search);
-      var path = params.get('path');
-      var isNew = params.get('new') === 'true';
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('editor-page').style.display = 'flex';
 
-      if (path && !isNew) {
-        document.getElementById('path-input').value = path;
-        loadFile(path);
-      }
+        // 绑定按钮
+        document.getElementById('btn-save').onclick = saveFile;
+        document.getElementById('btn-logout').onclick = logout;
+        document.getElementById('btn-preview').onclick = togglePreview;
 
-      document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+        document.addEventListener('keydown', function(e) {
+          if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+        });
+
+        var params = new URLSearchParams(window.location.search);
+        var path = params.get('path');
+        if (path) { document.getElementById('path-input').value = path; loadFile(path); }
       });
     });
   </script>
