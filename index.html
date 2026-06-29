@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>知识库</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <style>
+    /* 编辑按钮样式 */
+    .edit-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0366d6;
+      color: white;
+      border: none;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(3, 102, 214, 0.3);
+      transition: all 0.2s;
+      z-index: 999;
+    }
+    .edit-btn:hover {
+      background: #0256b9;
+      transform: scale(1.1);
+    }
+    .edit-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">加载中...</div>
+  
+  <!-- 编辑按钮 -->
+  <button class="edit-btn" id="edit-btn" title="编辑此页面">
+    <svg viewBox="0 0 24 24">
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+    </svg>
+  </button>
+
+  <script>
+    window.$docsify = {
+      name: '知识库',
+      repo: 'https://github.com/Archercool/wiki-editor',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      search: {
+        placeholder: '搜索知识库',
+        noData: '没有找到结果',
+        depth: 3
+      },
+      auto2top: true,
+      homepage: 'HOME.md'
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+  
+  <script>
+    // 编辑按钮功能
+    document.getElementById('edit-btn').addEventListener('click', function() {
+      // 获取当前页面路径
+      var hash = window.location.hash;
+      var path = hash.replace('#/', '').replace('.md', '');
+      
+      // 如果是首页，不跳转编辑
+      if (!path || path === '' || path === '/') {
+        alert('请先打开一篇文章再编辑');
+        return;
+      }
+      
+      // 跳转到编辑页面
+      window.location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
+    });
+
+    // 根据当前页面显示/隐藏编辑按钮
+    function updateEditBtnVisibility() {
+      var editBtn = document.getElementById('edit-btn');
+      var hash = window.location.hash;
+      
+      // 首页不显示编辑按钮
+      if (!hash || hash === '#/' || hash === '#') {
+        editBtn.style.display = 'none';
+      } else {
+        editBtn.style.display = 'flex';
+        editBtn.style.alignItems = 'center';
+        editBtn.style.justifyContent = 'center';
+      }
+    }
+
+    // 监听路由变化
+    window.addEventListener('hashchange', updateEditBtnVisibility);
+    window.addEventListener('load', updateEditBtnVisibility);
+  </script>
+</body>
+</html>
