@@ -122,7 +122,53 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+  <script>
+    // 动态构建侧边栏
+    (function() {
+      var orig = window.$docsify || {};
+      orig.plugins = [function(hook) {
+        hook.ready(function() {
+          var nav = document.querySelector('.sidebar-nav');
+          if (!nav) return setTimeout(function() { hook.ready(arguments.callee); }, 500);
+          
+          fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var files = (data.tree || []).filter(function(f) {
+                return f.path.startsWith('wiki/') && f.path.endsWith('.md');
+              });
+              
+              var groups = {};
+              files.forEach(function(f) {
+                var parts = f.path.replace('wiki/', '').split('/');
+                if (parts.length >= 2) {
+                  var cat = parts[0];
+                  if (!groups[cat]) groups[cat] = [];
+                  groups[cat].push({ name: decodeURIComponent(parts[parts.length-1].replace('.md','')), path: f.path });
+                }
+              });
+              
+              var sidebar = '- [首页](/)\n';
+              Object.keys(groups).sort().forEach(function(cat) {
+                sidebar += '- **' + cat + '**\n';
+                groups[cat].forEach(function(article) {
+                  sidebar += '  - [' + article.name + '](' + article.path + ')\n';
+                });
+              });
+              
+              var loading = document.getElementById('sidebar-dyn');
+              if (loading) loading.remove();
+              
+              var style = document.createElement('style');
+              style.textContent = '.sidebar-nav { white-space: normal !important; }';
+              document.head.appendChild(style);
+              nav.innerHTML = window.Docsify.util.parser(sidebar);
+            });
+        });
+      }];
+      window.$docsify = orig;
+    })();
+  </script>
   
   <script>
     // 新建文章按钮功能
