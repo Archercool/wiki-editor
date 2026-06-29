@@ -1,24 +1,19 @@
 /**
- * 认证模块 - 支持 Token 和 OAuth
+ * 认证模块 - 支持 GitHub OAuth
  */
 const Auth = {
   CLIENT_ID: 'Iv23lib96sWmtpVWoZfE',
+  OAUTH_PROXY: 'https://github-oauth-proxy.aoranli1126.workers.dev',
+  REDIRECT_URI: 'https://archercool.github.io/wiki-editor/callback.html',
   TOKEN_KEY: 'wiki_editor_token',
   USER_KEY: 'wiki_editor_user',
-  REMEMBER_KEY: 'wiki_editor_remember',
 
   /**
    * 存储 Token
    */
-  storeToken(token, remember = true) {
+  storeToken(token) {
     sessionStorage.setItem(this.TOKEN_KEY, token);
-    if (remember) {
-      localStorage.setItem(this.TOKEN_KEY, token);
-      localStorage.setItem(this.REMEMBER_KEY, 'true');
-    } else {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.REMEMBER_KEY);
-    }
+    localStorage.setItem(this.TOKEN_KEY, token);
   },
 
   /**
@@ -35,7 +30,6 @@ const Auth = {
     sessionStorage.removeItem(this.TOKEN_KEY);
     sessionStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REMEMBER_KEY);
   },
 
   /**
@@ -43,13 +37,6 @@ const Auth = {
    */
   isAuthenticated() {
     return !!this.getToken();
-  },
-
-  /**
-   * 检查是否设置了记住
-   */
-  isRemembered() {
-    return localStorage.getItem(this.REMEMBER_KEY) === 'true';
   },
 
   /**
@@ -84,6 +71,39 @@ const Auth = {
   },
 
   /**
+   * 跳转到 GitHub OAuth 授权
+   */
+  login() {
+    const params = new URLSearchParams({
+      client_id: this.CLIENT_ID,
+      redirect_uri: this.REDIRECT_URI,
+      scope: 'repo',
+      state: Math.random().toString(36).substring(7)
+    });
+    
+    window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+  },
+
+  /**
+   * 用 code 换取 token
+   */
+  async exchangeCode(code) {
+    try {
+      const response = await fetch(`${this.OAUTH_PROXY}/api/token?code=${code}`);
+      const data = await response.json();
+      
+      if (data.access_token) {
+        this.storeToken(data.access_token);
+        return { success: true, token: data.access_token };
+      }
+      
+      return { success: false, error: data.error_description || '授权失败' };
+    } catch (error) {
+      return { success: false, error: '网络错误' };
+    }
+  },
+
+  /**
    * 显示登录弹窗
    */
   renderAuthModal(onSuccess) {
@@ -96,45 +116,15 @@ const Auth = {
           <button class="auth-modal-close">&times;</button>
         </div>
         <div class="auth-modal-body">
-          <div id="auth-tabs">
-            <div class="auth-tab-buttons">
-              <button class="auth-tab-btn active" data-tab="token">Token 登录</button>
-              <button class="auth-tab-btn" data-tab="guide">获取教程</button>
-            </div>
-            
-            <div class="auth-tab-content active" id="tab-token">
-              <p>输入你的 GitHub Personal Access Token</p>
-              <input type="password" class="auth-token-input" 
-                     placeholder="ghp_xxxxxxxxxxxx" autofocus>
-              <label class="remember-label">
-                <input type="checkbox" class="remember-checkbox" checked> 记住我
-              </label>
-              <div class="auth-error" style="display: none;"></div>
-              <button class="primary-btn auth-submit-btn" style="width: 100%; margin-top: 16px;">
-                登录
-              </button>
-            </div>
-            
-            <div class="auth-tab-content" id="tab-guide" style="display: none;">
-              <div class="guide-steps">
-                <p><strong>获取 Token 步骤：</strong></p>
-                <ol>
-                  <li>访问 <a href="https://github.com/settings/tokens" target="_blank">GitHub Token 页面</a></li>
-                  <li>点击 <strong>"Generate new token (classic)"</strong></li>
-                  <li>Note 填写：<code>wiki-editor</code></li>
-                  <li>Expiration 选择：<code>90 days</code></li>
-                  <li>勾选权限：<code>repo</code>（完整仓库权限）</li>
-                  <li>点击 <strong>"Generate token"</strong></li>
-                  <li>复制生成的 Token（只显示一次）</li>
-                </ol>
-                <p class="guide-note">
-                  <small>⚠️ Token 只显示一次，请妥善保存</small>
-                </p>
-              </div>
-              <button class="primary-btn" onclick="window.open('https://github.com/settings/tokens', '_blank')" style="width: 100%;">
-                打开 GitHub Token 页面
-              </button>
-            </div>
+          <div class="oauth-login-box">
+            <p>使用 GitHub 账号一键登录</p>
+            <p class="oauth-hint">首次使用需要授权，之后自动登录</p>
+            <button id="github-login-btn" class="github-btn">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+              使用 GitHub 账号登录
+            </button>
           </div>
         </div>
       </div>
@@ -142,78 +132,13 @@ const Auth = {
 
     document.body.appendChild(modal);
 
-    // Tab 切换
-    const tabBtns = modal.querySelectorAll('.auth-tab-btn');
-    const tabContents = modal.querySelectorAll('.auth-tab-content');
-    
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        tabContents.forEach(c => {
-          c.classList.remove('active');
-          c.style.display = 'none';
-        });
-        btn.classList.add('active');
-        const tabId = 'tab-' + btn.dataset.tab;
-        document.getElementById(tabId).style.display = 'block';
-        document.getElementById(tabId).classList.add('active');
-      });
-    });
-
-    const tokenInput = modal.querySelector('.auth-token-input');
-    const submitBtn = modal.querySelector('.auth-submit-btn');
+    const loginBtn = modal.querySelector('#github-login-btn');
     const closeBtn = modal.querySelector('.auth-modal-close');
-    const errorDiv = modal.querySelector('.auth-error');
-    const rememberCheckbox = modal.querySelector('.remember-checkbox');
 
-    // 如果之前设置了记住
-    if (this.isRemembered()) {
-      rememberCheckbox.checked = true;
-    }
-
-    const closeModal = () => modal.remove();
-
-    const handleSubmit = async () => {
-      const token = tokenInput.value.trim();
-      if (!token) {
-        errorDiv.textContent = '请输入 Token';
-        errorDiv.style.display = 'block';
-        return;
-      }
-
-      if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-        errorDiv.textContent = 'Token 格式不正确，应以 ghp_ 或 github_pat_ 开头';
-        errorDiv.style.display = 'block';
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = '验证中...';
-      errorDiv.style.display = 'none';
-
-      const result = await this.validateToken(token);
-
-      if (result.valid) {
-        this.storeToken(token, rememberCheckbox.checked);
-        closeModal();
-        if (onSuccess) onSuccess(result.user);
-      } else {
-        errorDiv.textContent = result.error;
-        errorDiv.style.display = 'block';
-        submitBtn.disabled = false;
-        submitBtn.textContent = '登录';
-      }
-    };
-
-    submitBtn.addEventListener('click', handleSubmit);
-    tokenInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleSubmit();
-    });
-    closeBtn.addEventListener('click', closeModal);
+    loginBtn.addEventListener('click', () => this.login());
+    closeBtn.addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
+      if (e.target === modal) modal.remove();
     });
-
-    tokenInput.focus();
   }
 };

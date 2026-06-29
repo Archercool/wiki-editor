@@ -212,6 +212,20 @@ body {
 
 /* ==================== OAuth 样式 ==================== */
 
+.oauth-login-box {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.oauth-login-box p {
+  margin-bottom: 8px;
+}
+
+.oauth-hint {
+  font-size: 13px;
+  color: #999;
+}
+
 .github-btn {
   display: flex;
   align-items: center;
