@@ -58,7 +58,44 @@
       subMaxLevel: 2,
       search: { placeholder: '搜索知识库', noData: '没有找到结果', depth: 3 },
       auto2top: true,
-      homepage: 'HOME.md'
+      homepage: 'HOME.md',
+      plugins: [function(hook) {
+        var done = false;
+        hook.doneEach(function() {
+          if (done) return;
+          var nav = document.querySelector('.sidebar-nav');
+          if (!nav) return;
+          done = true;
+          fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              var files = (data.tree || []).filter(function(f) {
+                return f.path.startsWith('wiki/') && f.path.endsWith('.md');
+              });
+              var groups = {};
+              files.forEach(function(f) {
+                var parts = f.path.replace('wiki/', '').split('/');
+                if (parts.length >= 2) {
+                  var cat = parts[0];
+                  var name = decodeURIComponent(parts[parts.length - 1].replace('.md', ''));
+                  if (!groups[cat]) groups[cat] = [];
+                  groups[cat].push({ name: name, path: f.path });
+                }
+              });
+              var html = '<ul class="sidebar-nav"><li><a href="/">首页</a></li>';
+              Object.keys(groups).sort().forEach(function(cat) {
+                html += '<li><p class="sidebar-title">' + cat + '</p><ul>';
+                groups[cat].forEach(function(a) {
+                  html += '<li><a href="' + a.path + '">' + a.name + '</a></li>';
+                });
+                html += '</ul></li>';
+              });
+              html += '</ul>';
+              nav.outerHTML = html;
+            })
+            .catch(function() {});
+        });
+      }]
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
