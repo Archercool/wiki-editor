@@ -75,61 +75,67 @@ const Editor = {
       'outline'
     ];
 
-    this.instance = new Vditor('vditor', {
-      // 模式：即时渲染（所见即所得）
-      mode: 'sv',
-      
-      // 工具栏
-      toolbar,
-      
-      // 预览配置
-      preview: {
-        delay: 300,
-        mode: 'preview',
-        markdown: {
-          toc: true
+    // 确保容器可见后再初始化
+    setTimeout(() => {
+      this.instance = new Vditor('vditor', {
+        // 模式：即时渲染（所见即所得）
+        mode: 'sv',
+        
+        // 工具栏
+        toolbar,
+        
+        // 预览配置
+        preview: {
+          delay: 300,
+          mode: 'preview',
+          markdown: {
+            toc: true
+          }
+        },
+        
+        // 缓存（禁用，我们自己管理）
+        cache: {
+          enable: false
+        },
+        
+        // 计数器
+        counter: {
+          enable: true
+        },
+        
+        // 主题
+        theme: 'classic',
+        
+        // 语言
+        lang: 'zh_CN',
+        
+        // 回调
+        input: () => {
+          this.updateWordCount();
+        },
+        
+        // 高度
+        height: 'calc(100vh - 120px)',
+
+        // 自定义提示
+        outline: {
+          enable: true,
+          position: 'right'
         }
-      },
-      
-      // 缓存（禁用，我们自己管理）
-      cache: {
-        enable: false
-      },
-      
-      // 计数器
-      counter: {
-        enable: true
-      },
-      
-      // 主题
-      theme: 'classic',
-      
-      // 语言
-      lang: 'zh_CN',
-      
-      // 回调
-      input: () => {
-        this.updateWordCount();
-      },
-      
-      // 高度
-      height: window.innerHeight - 100,
+      });
 
-      // 自定义提示
-      outline: {
-        enable: true,
-        position: 'right'
-      }
-    });
+      // 设置初始内容
+      this.instance.setValue(content || '');
 
-    // 设置初始内容
-    this.instance.setValue(content);
+      // 绑定快捷键
+      this.bindKeyboardShortcuts();
 
-    // 绑定快捷键
-    this.bindKeyboardShortcuts();
-
-    // 绑定粘贴和拖拽
-    this.bindPasteAndDrop();
+      // 绑定粘贴和拖拽
+      this.bindPasteAndDrop();
+      
+      // 更新字数
+      this.updateWordCount();
+    }, 100);
   },
 
   /**
