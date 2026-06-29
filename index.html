@@ -125,14 +125,13 @@
               });
           }
 
-          // 注入底部编辑按钮
+          // 底部编辑按钮（固定于页面右下）
           if (document.getElementById('sidebar-bottombar')) return;
-          sidebar.style.position = 'relative';
           var bar = document.createElement('div');
           bar.id = 'sidebar-bottombar';
-          bar.style.cssText = 'position:absolute;bottom:12px;right:16px;z-index:999;';
-          bar.innerHTML = '<a href="edit.html" style="background:#24292e;color:#fff;padding:7px 14px;border-radius:4px;text-decoration:none;font-size:13px;display:inline-block;">编辑</a>';
-          sidebar.appendChild(bar);
+          bar.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;';
+          bar.innerHTML = '<a href="edit.html" style="background:#24292e;color:#fff;padding:7px 16px;border-radius:4px;text-decoration:none;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">编辑</a>';
+          document.body.appendChild(bar);
         });
       }]
     };
