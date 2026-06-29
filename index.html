@@ -66,7 +66,12 @@
           if (!sidebar) return;
           if (!done) {
             done = true;
-            var nav = document.querySelector('.sidebar-nav');
+            var nav = sidebar.querySelector('.sidebar-nav');
+            if (!nav) {
+              nav = document.createElement('nav');
+              nav.className = 'sidebar-nav';
+              sidebar.appendChild(nav);
+            }
             fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
               .then(function(r) { return r.json(); })
               .then(function(data) {
@@ -76,7 +81,7 @@
                   var p = f.path.replace('wiki/', '').split('/');
                   if (p.length >= 2) {
                     if (!groups[p[0]]) groups[p[0]] = [];
-                    groups[p[0]].push({ name: decodeURIComponent(p[p.length-1].replace('.md','')), path: f.path });
+                    groups[p[0]].push({ name: decodeURIComponent(p[p.length-1].replace('.md', '')), path: f.path });
                   }
                 });
                 var html = '- [首页](/)\n';
