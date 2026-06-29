@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
   <style>
-    /* 悬浮按钮容器 */
     .fab-container {
       position: fixed;
       bottom: 24px;
@@ -14,80 +13,40 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      z-index: 999;
+      z-index: 998;
     }
-    /* 通用按钮样式 */
     .fab-btn {
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 56px; height: 56px;
+      border-radius: 50%; border: none;
+      font-size: 24px; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      display: flex; align-items: center; justify-content: center;
     }
-    .fab-btn:hover {
-      transform: scale(1.1);
-    }
-    .fab-btn svg {
-      width: 24px;
-      height: 24px;
-      fill: currentColor;
-    }
-    /* 编辑按钮 */
-    .edit-btn {
-      background: #0366d6;
-      color: white;
-    }
-    .edit-btn:hover {
-      background: #0256b9;
-    }
-    /* 新建按钮 */
-    .new-btn {
-      background: #28a745;
-      color: white;
-    }
-    .new-btn:hover {
-      background: #22863a;
-    }
-    /* 登录按钮 */
-    .login-link {
-      display: none;
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 1000;
-      background: #24292e;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .login-link:hover {
-      background: #2f363d;
-    }
-    .login-link svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
+    .fab-btn:hover { transform: scale(1.1); }
+    .fab-btn svg { width: 24px; height: 24px; fill: currentColor; }
+    .edit-fab { background: #0366d6; color: #fff; }
+    .new-fab { background: #28a745; color: #fff; }
   </style>
 </head>
 <body>
   <div id="app">加载中...</div>
 
-  <a href="edit.html" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:#24292e;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,.2);">编辑</a>
+  <div class="fab-container">
+    <button class="fab-btn new-fab" onclick="location.href='edit.html'">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    </button>
+    <button class="fab-btn edit-fab" onclick="editCurrent()">
+      <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    </button>
+  </div>
 
   <script>
+    function editCurrent() {
+      var path = window.location.hash.replace('#/', '').replace('.md', '');
+      if (!path || path === '/') { alert('请先打开一篇文章'); return; }
+      location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
+    }
+
     window.$docsify = {
       name: '知识库',
       repo: 'https://github.com/Archercool/wiki-editor',
@@ -102,6 +61,7 @@
           var sidebar = document.querySelector('.sidebar');
           if (!sidebar) return;
 
+          // 动态加载文章列表
           if (!done) {
             done = true;
             var nav = document.querySelector('.sidebar-nav');
@@ -125,6 +85,16 @@
                 nav.innerHTML = window.Docsify.util.parser(html);
               });
           }
+
+          // 侧边栏底部编辑入口
+          if (document.getElementById('sb-edit')) return;
+          sidebar.style.position = 'relative';
+          var el = document.createElement('a');
+          el.id = 'sb-edit';
+          el.href = 'edit.html';
+          el.textContent = '编辑';
+          el.style.cssText = 'position:absolute;bottom:12px;right:16px;z-index:999;background:#24292e;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;';
+          sidebar.appendChild(el);
         });
       }]
     };
