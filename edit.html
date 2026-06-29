@@ -196,11 +196,12 @@
         
         if (response.ok) {
           var data = await response.json();
-          var content = decodeURIComponent(escape(atob(data.content)));
+          // 去除换行符后再解码
+          var base64 = data.content.replace(/\n/g, '');
+          var content = decodeURIComponent(escape(atob(base64)));
           document.getElementById('path-input').value = path;
           initEditor(content);
         } else if (response.status === 404) {
-          // 文件不存在，创建新文件
           document.getElementById('path-input').value = path;
           initEditor('');
         } else {
