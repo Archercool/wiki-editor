@@ -129,10 +129,9 @@
           if (document.getElementById('sidebar-bottombar')) return;
           var bar = document.createElement('div');
           bar.id = 'sidebar-bottombar';
-          bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:12px 16px;text-align:right;';
+          bar.style.cssText = 'position:absolute;bottom:0;right:0;padding:12px 16px;z-index:1;';
           bar.innerHTML = '<a href="edit.html" style="background:#24292e;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;">编辑</a>';
           sidebar.style.position = 'relative';
-          sidebar.style.minHeight = '100vh';
           sidebar.appendChild(bar);
         });
       }]
