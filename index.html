@@ -27,12 +27,23 @@
     .edit-fab { background: #0366d6; color: #fff; }
     .new-fab { background: #28a745; color: #fff; }
     .login-fab { background: #24292e; color: #fff; }
+    .folder-fab { background: #6f42c1; color: #fff; }
+    .modal-mask{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+    .modal-panel{background:#fff;border-radius:8px;padding:24px;width:360px;max-width:90%;box-shadow:0 4px 24px rgba(0,0,0,.2)}
+    .modal-panel h3{margin:0 0 12px;font-size:16px;color:#24292e}
+    .modal-panel input{width:100%;padding:8px 12px;border:1px solid #d1d5da;border-radius:4px;font-size:14px;box-sizing:border-box}
+    .modal-panel .btns{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+    .modal-panel .btns button{padding:6px 16px;border-radius:4px;font-size:13px;cursor:pointer;border:1px solid #d1d5da;background:#fff}
+    .modal-panel .btns .btn-ok{background:#28a745;color:#fff;border-color:#28a745}
   </style>
 </head>
 <body>
   <div id="app">加载中...</div>
 
   <div class="fab-container">
+    <button class="fab-btn folder-fab" onclick="showFolderModal()" title="新建文件夹">
+      <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+    </button>
     <button class="fab-btn new-fab" onclick="location.href='edit.html'">
       <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
     </button>
@@ -44,12 +55,61 @@
     </button>
   </div>
 
+  <div class="modal-mask" id="folder-modal" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-panel">
+      <h3>新建文件夹</h3>
+      <input type="text" id="folder-name" placeholder="文件夹名称，如 编程">
+      <div class="btns">
+        <button onclick="document.getElementById('folder-modal').style.display='none'">取消</button>
+        <button class="btn-ok" onclick="createFolder()">创建</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    var OWNER = 'Archercool', REPO = 'wiki-editor', BRANCH = 'main';
+
+    function tok() { return localStorage.getItem('wiki_editor_token'); }
+
     function editCurrent() {
       var path = window.location.hash.replace('#/', '').replace('.md', '');
       if (!path || path === '/') { alert('请先打开一篇文章'); return; }
       location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
     }
+
+    function showFolderModal() {
+      if (!tok()) { alert('请先在编辑器页面登录 GitHub'); location.href = 'edit.html'; return; }
+      document.getElementById('folder-modal').style.display = 'flex';
+      document.getElementById('folder-name').value = '';
+      document.getElementById('folder-name').focus();
+    }
+
+    async function createFolder() {
+      var name = document.getElementById('folder-name').value.trim();
+      if (!name) { alert('请输入文件夹名称'); return; }
+      if (!/^[a-zA-Z0-9\u4e00-\u9fa5_-]+$/.test(name)) { alert('名称只能包含中文、字母、数字、下划线、短横线'); return; }
+      var path = 'wiki/' + name + '/.gitkeep';
+      var enc = function(s) { return s.split('/').map(function(x){return encodeURIComponent(x)}).join('/'); };
+      var enc2 = function(s) { return btoa(unescape(encodeURIComponent(s))); };
+      try {
+        var r = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + enc(path), {
+          method: 'PUT',
+          headers: { 'Authorization': 'token ' + tok(), 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+          body: JSON.stringify({ message: 'Create folder ' + name, content: enc2(''), branch: BRANCH })
+        });
+        if (r.ok) {
+          document.getElementById('folder-modal').style.display = 'none';
+          location.reload();
+        } else {
+          var err = await r.json();
+          alert('创建失败: ' + (err.message || '未知错误'));
+        }
+      } catch(e) { alert('创建失败: ' + e.message); }
+    }
+
+    document.getElementById('folder-name').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') createFolder();
+    });
 
     window.$docsify = {
       name: '知识库',
