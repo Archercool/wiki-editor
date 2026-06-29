@@ -213,10 +213,16 @@
 
     // 初始化编辑器
     function initEditor(content) {
-      // 等待容器显示后再初始化
+      document.getElementById('app').style.display = 'none';
+      var container = document.getElementById('editor-container');
+      container.style.display = 'flex';
+      
       setTimeout(function() {
         var vditorEl = document.getElementById('vditor');
         if (!vditorEl) return;
+        
+        // 清空容器
+        vditorEl.innerHTML = '';
         
         editor = new Vditor('vditor', {
           mode: 'sv',
@@ -238,7 +244,7 @@
           },
           theme: 'classic',
           lang: 'zh_CN',
-          height: '100%',
+          height: 'calc(100vh - 120px)',
           outline: {
             enable: false
           },
@@ -246,8 +252,8 @@
             updateWordCount();
           },
           after: function() {
-            // 编辑器加载完成后设置内容
             editor.setValue(content || '');
+            updateWordCount();
           }
         });
         
@@ -258,7 +264,7 @@
             saveFile();
           }
         });
-      }, 200);
+      }, 300);
     }
 
     // 更新字数统计
