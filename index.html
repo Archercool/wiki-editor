@@ -125,20 +125,15 @@
               });
           }
 
-          // 注入底部按钮
-          if (document.getElementById('sidebar-toggle')) return;
+          // 注入底部编辑按钮
+          if (document.getElementById('sidebar-bottombar')) return;
           sidebar.style.position = 'relative';
           sidebar.style.paddingBottom = '50px';
           var bar = document.createElement('div');
           bar.id = 'sidebar-bottombar';
-          bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#fff;border-top:1px solid #eee;';
-          bar.innerHTML = '<button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;font-size:18px;">☰</button>' +
-            '<a href="edit.html" id="login-link-sidebar" style="display:none;background:#24292e;color:#fff;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:13px;">编辑</a>';
+          bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:flex-end;align-items:center;background:#fff;border-top:1px solid #eee;';
+          bar.innerHTML = '<a href="edit.html" style="background:#24292e;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:13px;">编辑</a>';
           sidebar.appendChild(bar);
-          document.getElementById('sidebar-toggle').onclick = function() {
-            var l = document.getElementById('login-link-sidebar');
-            l.style.display = l.style.display === 'none' ? 'inline' : 'none';
-          };
         });
       }]
     };
