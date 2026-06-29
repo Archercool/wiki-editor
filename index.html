@@ -72,8 +72,9 @@
     function tok() { return localStorage.getItem('wiki_editor_token'); }
 
     function editCurrent() {
-      var path = window.location.hash.replace('#/', '').replace('.md', '');
-      if (!path || path === '/') { alert('请先打开一篇文章'); return; }
+      var raw = window.location.hash.replace('#/', '').replace('.md', '');
+      if (!raw || raw === '/') { alert('请先打开一篇文章'); return; }
+      var path = decodeURIComponent(raw);
       location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
     }
 
