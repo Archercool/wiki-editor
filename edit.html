@@ -4,46 +4,73 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>知识库编辑器</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@toast-ui/editor@3/dist/toastui-editor.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;display:flex;flex-direction:column}
-/* 顶部栏 */
-.bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border-bottom:1px solid #e0e0e0;flex-shrink:0}
-.bar .logo{font-weight:700;font-size:15px;color:#333;text-decoration:none;white-space:nowrap}
-.bar input{flex:1;min-width:120px;padding:6px 8px;border:1px solid #ddd;border-radius:3px;font:13px monospace}
-.bar input:focus{outline:none;border-color:#0366d6}
-.bar button{padding:6px 12px;border:none;border-radius:3px;cursor:pointer;font-size:13px;white-space:nowrap}
-.btn-save{background:#0366d6;color:#fff}
-.btn-save:hover{background:#0256b9}
-.btn-out{background:none;color:#666;border:1px solid #ddd!important}
-.btn-out:hover{background:#f5f5f5}
-#status{font-size:12px;color:#666;min-width:60px}
-#editor-area{flex:1;overflow:hidden}
-
-/* 登录页 */
-.login-page{display:flex;align-items:center;justify-content:center;height:100vh;background:#f5f5f5}
-.login-box{background:#fff;padding:36px;border-radius:8px;box-shadow:0 2px 16px rgba(0,0,0,.1);width:380px;max-width:90%;text-align:center}
-.login-box h2{margin-bottom:6px}
-.login-box p{color:#666;margin-bottom:18px;font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;display:flex;flex-direction:column;background:#263238}
+/* 顶部 */
+.bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#1a1a2e;border-bottom:1px solid #333;flex-shrink:0}
+.bar .logo{font-weight:700;font-size:14px;color:#e0e0e0;text-decoration:none;white-space:nowrap}
+.bar input{flex:1;min-width:120px;padding:6px 8px;border:1px solid #444;border-radius:3px;font:13px monospace;background:#2d2d44;color:#e0e0e0}
+.bar input:focus{outline:none;border-color:#569cd6}
+.bar button{padding:6px 12px;border:none;border-radius:3px;cursor:pointer;font-size:12px;white-space:nowrap}
+.btn-save{background:#0e639c;color:#fff}
+.btn-save:hover{background:#1177bb}
+.btn-out{background:#333;color:#ccc;border:1px solid #444!important}
+.btn-out:hover{background:#444}
+#status{font-size:11px;color:#888;min-width:50px}
+/* 编辑区 */
+.main{flex:1;display:flex;overflow:hidden}
+.editor-pane{flex:1;overflow:hidden;border-right:1px solid #333;display:flex;flex-direction:column}
+.editor-pane .CodeMirror{flex:1;font-size:14px}
+.preview-pane{flex:1;overflow-y:auto;padding:20px;background:#1e1e2e;color:#d4d4d4;display:none}
+.preview-pane h1,.preview-pane h2,.preview-pane h3{color:#fff;margin:16px 0 8px}
+.preview-pane p{line-height:1.7;margin:8px 0}
+.preview-pane code{background:#2d2d44;padding:2px 6px;border-radius:3px;font-size:13px;color:#ce9178}
+.preview-pane pre{background:#1a1a2e;padding:12px;border-radius:4px;overflow-x:auto}
+.preview-pane pre code{background:none;padding:0}
+.preview-pane ul,.preview-pane ol{padding-left:24px}
+.preview-pane li{margin:4px 0}
+.preview-pane a{color:#569cd6}
+.preview-pane blockquote{border-left:3px solid #444;padding:4px 12px;color:#999;margin:8px 0}
+.preview-pane table{border-collapse:collapse;width:100%}
+.preview-pane th,.preview-pane td{border:1px solid #444;padding:6px 10px;text-align:left}
+.preview-pane th{background:#2d2d44}
+.preview-pane hr{border:none;border-top:1px solid #333;margin:16px 0}
+.editor-label{font-size:11px;color:#888;padding:4px 12px;background:#1a1a2e;border-bottom:1px solid #333;text-transform:uppercase;letter-spacing:1px}
+/* 登录 */
+.login-page{display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e}
+.login-box{background:#263238;padding:36px;border-radius:8px;box-shadow:0 2px 20px rgba(0,0,0,.3);width:380px;max-width:90%;text-align:center}
+.login-box h2{margin-bottom:6px;color:#e0e0e0}
+.login-box p{color:#888;margin-bottom:18px;font-size:14px}
 .gh-btn{display:inline-flex;align-items:center;gap:8px;width:100%;padding:11px;background:#24292e;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;margin-bottom:14px;justify-content:center}
 .gh-btn:hover{background:#2f363d}
-.diver{display:flex;align-items:center;gap:10px;margin:14px 0;color:#999;font-size:12px}
-.diver::before,.diver::after{content:'';flex:1;border-bottom:1px solid #eee}
-.login-box input[type=password]{width:100%;padding:8px;border:1px solid #ddd;border-radius:3px;font-size:13px}
-.tk-btn{width:100%;margin-top:8px;padding:8px;background:#0366d6;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:13px}
-.hint{font-size:12px;color:#999;margin-top:8px}
-.hint a{color:#0366d6}
-
-/* Toast UI 主题 */
-.toastui-editor-defaultUI{border:none!important}
-.toastui-editor-defaultUI-toolbar{border-radius:0!important;border-bottom:1px solid #e0e0e0!important}
-.toastui-editor-mode-switch{display:none!important}
+.diver{display:flex;align-items:center;gap:10px;margin:14px 0;color:#555;font-size:12px}
+.diver::before,.diver::after{content:'';flex:1;border-bottom:1px solid #333}
+.login-box input[type=password]{width:100%;padding:8px;border:1px solid #444;border-radius:3px;font-size:13px;background:#1a1a2e;color:#e0e0e0}
+.tk-btn{width:100%;margin-top:8px;padding:8px;background:#0e639c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:13px}
+.hint{font-size:12px;color:#666;margin-top:8px}
+.hint a{color:#569cd6}
+/* 文件弹窗 */
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
+.modal-box{background:#263238;border-radius:8px;width:560px;max-width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #333}
+.modal-h h3{font-size:15px;color:#e0e0e0}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#666}
+.modal-body{flex:1;overflow-y:auto;padding:10px}
+.modal-foot{padding:10px 18px;border-top:1px solid #333}
+.modal-foot input{width:100%;padding:8px;border:1px solid #444;border-radius:3px;font-size:13px;background:#1a1a2e;color:#e0e0e0;margin-bottom:8px;box-sizing:border-box}
+.file-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:3px;transition:background .2s}
+.file-row:hover{background:#2d2d44}
+.file-row span{font:13px monospace;color:#d4d4d4;flex:1}
+.file-row button{padding:3px 8px;border-radius:3px;font-size:11px;cursor:pointer;background:none;margin:0 2px}
+.btn-edit{border:1px solid #569cd6;color:#569cd6}
+.btn-del{border:1px solid #dc3545;color:#dc3545}
 </style>
 </head>
 <body>
 
-<!-- 登录 -->
 <div id="login-page" class="login-page">
   <div class="login-box">
     <h2>知识库编辑器</h2>
@@ -59,225 +86,167 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
   </div>
 </div>
 
-<!-- 编辑器 -->
 <div id="editor-page" style="display:none;height:100vh;flex-direction:column">
   <div class="bar">
-    <a href="index.html" class="logo">知识库</a>
-    <span style="color:#ccc">/</span>
-    <input type="text" id="path-input" placeholder="文件路径，如 wiki/AI/新文章.md">
+    <a href="index.html" class="logo">Wiki</a>
+    <span style="color:#555">/</span>
+    <input type="text" id="path-input" placeholder="路径，如 wiki/AI/新文章.md">
     <span id="status"></span>
+    <button class="btn-out" onclick="togglePreview()">预览</button>
     <button class="btn-save" onclick="save()">保存 Ctrl+S</button>
-    <button class="btn-out" id="open-btn">打开文件</button>
+    <button class="btn-out" onclick="openModal()">打开</button>
     <button class="btn-out" onclick="logout()">退出</button>
   </div>
-  <div id="editor-area"></div>
+  <div class="main">
+    <div class="editor-pane" id="edit-pane">
+      <div class="editor-label">Markdown</div>
+      <textarea id="md-editor"></textarea>
+    </div>
+    <div class="preview-pane" id="preview-pane"></div>
+  </div>
 </div>
 
-<!-- 文件选择弹窗 -->
-<div id="file-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)closeModal()">
-  <div style="background:#fff;border-radius:8px;width:560px;max-width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,.2)">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eee">
-      <h3 style="font-size:15px">选择文件</h3>
-      <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999">&times;</button>
-    </div>
-    <div id="modal-list" style="flex:1;overflow-y:auto;padding:10px">加载中...</div>
-    <div style="padding:10px 18px;border-top:1px solid #eee">
-      <input type="text" id="modal-new" placeholder="新建路径，如 wiki/编程/Python.md" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:3px;font-size:13px;margin-bottom:8px;box-sizing:border-box">
+<div class="modal-bg" id="file-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-h"><h3>文件列表</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body" id="modal-list">加载中...</div>
+    <div class="modal-foot">
+      <input type="text" id="modal-new" placeholder="新建路径，如 wiki/编程/Python.md">
       <button class="btn-save" style="width:100%;padding:9px" onclick="createNew()">创建并打开</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@toast-ui/editor@3/dist/toastui-editor-all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/overlay.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gfm/gfm.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.1.4/marked.min.js"></script>
+
 <script>
 var CLIENT_ID = 'Ov23ctCfpMxGeAINGXGW';
 var REDIRECT = 'https://archercool.github.io/wiki-editor/callback.html';
-var REPO_OWNER = 'Archercool';
-var REPO_NAME = 'wiki-editor';
-var BRANCH = 'main';
-var editor = null;
+var OWNER = 'Archercool', REPO = 'wiki-editor', BRANCH = 'main';
+var cm = null;
+var showingPreview = false;
 var allFiles = [];
 
+// === Token ===
 function tok() { return localStorage.getItem('wiki_editor_token') || sessionStorage.getItem('wiki_editor_token'); }
 function setTok(t) { localStorage.setItem('wiki_editor_token', t); }
 function clearTok() { localStorage.removeItem('wiki_editor_token'); sessionStorage.removeItem('wiki_editor_token'); }
-
-function oauthLogin() {
-  location.href = 'https://github.com/login/oauth/authorize?client_id=' + CLIENT_ID + '&redirect_uri=' + encodeURIComponent(REDIRECT) + '&scope=repo';
-}
-
-function tokenLogin() {
-  var t = document.getElementById('token-input').value.trim();
-  if (!t) { alert('请输入 Token'); return; }
-  setTok(t);
-  location.reload();
-}
-
+function oauthLogin() { location.href = 'https://github.com/login/oauth/authorize?client_id=' + CLIENT_ID + '&redirect_uri=' + encodeURIComponent(REDIRECT) + '&scope=repo'; }
+function tokenLogin() { var t = document.getElementById('token-input').value.trim(); if (!t) { alert('请输入 Token'); return; } setTok(t); location.reload(); }
 function logout() { clearTok(); location.reload(); }
 
+// === API ===
 function enc(s) { return s.split('/').map(function(x){return encodeURIComponent(x)}).join('/'); }
 function dec(b) { return decodeURIComponent(escape(atob(b.replace(/\n/g,'')))); }
 function enc2(s) { return btoa(unescape(encodeURIComponent(s))); }
-
-function api(path, opt) {
+function api(p, opt) {
   var h = { 'Authorization': 'token ' + tok(), 'Accept': 'application/vnd.github.v3+json' };
   if (opt && opt.body) h['Content-Type'] = 'application/json';
-  return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + path, { method: opt ? (opt.method || 'GET') : 'GET', headers: h, body: opt ? opt.body : undefined });
+  return fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + p, { method: opt ? (opt.method || 'GET') : 'GET', headers: h, body: opt ? opt.body : undefined });
 }
 
-async function load(path) {
+// === 编辑器 ===
+function initCM() {
+  cm = CodeMirror.fromTextArea(document.getElementById('md-editor'), {
+    mode: 'gfm',
+    lineNumbers: true,
+    lineWrapping: true,
+    theme: 'material-darker',
+    viewportMargin: Infinity,
+    extraKeys: {
+      'Ctrl-S': function() { save(); },
+      'Cmd-S': function() { save(); }
+    }
+  });
+  cm.on('change', function() {
+    document.getElementById('status').textContent = cm.getValue().length + ' 字';
+  });
+}
+
+async function loadFile(p) {
   var st = document.getElementById('status');
   st.textContent = '加载中...';
   try {
-    var r = await api(enc(path));
-    if (r.ok) {
-      editor.setMarkdown(dec((await r.json()).content));
-      st.textContent = '';
-    } else {
-      editor.setMarkdown('');
-      st.textContent = '新文件';
-    }
+    var r = await api(enc(p));
+    if (r.ok) { cm.setValue(dec((await r.json()).content)); st.textContent = ''; }
+    else { cm.setValue(''); st.textContent = '新文件'; }
   } catch(e) { st.textContent = '加载失败'; }
 }
 
 async function save() {
-  var path = document.getElementById('path-input').value.trim();
-  if (!path) { alert('请输入路径'); return; }
-  if (!path.endsWith('.md')) path += '.md';
-  document.getElementById('path-input').value = path;
-
-  var md = editor.getMarkdown();
+  var p = document.getElementById('path-input').value.trim();
+  if (!p) { alert('请输入路径'); return; }
+  if (!p.endsWith('.md')) p += '.md';
+  document.getElementById('path-input').value = p;
+  var md = cm.getValue();
   if (!md.trim()) { alert('内容不能为空'); return; }
-
   var st = document.getElementById('status');
   st.textContent = '保存中...';
   try {
     var sha = null;
-    var r = await api(enc(path));
+    var r = await api(enc(p));
     if (r.ok) sha = (await r.json()).sha;
-    var body = { message: 'Update ' + path, content: enc2(md), branch: BRANCH };
+    var body = { message: 'Update ' + p, content: enc2(md), branch: BRANCH };
     if (sha) body.sha = sha;
-    var r2 = await api(enc(path), { method: 'PUT', body: JSON.stringify(body) });
-    if (r2.ok) {
-      st.textContent = '已保存 ✓';
-      setTimeout(function(){ st.textContent = ''; }, 3000);
-    } else {
-      throw new Error((await r2.json()).message);
-    }
-  } catch(e) {
-    st.textContent = '失败';
-    alert('保存失败: ' + (e.message || '检查网络或权限'));
+    var r2 = await api(enc(p), { method: 'PUT', body: JSON.stringify(body) });
+    if (r2.ok) { st.textContent = '已保存 ✓'; setTimeout(function(){ st.textContent = ''; }, 3000); }
+    else { throw new Error((await r2.json()).message); }
+  } catch(e) { st.textContent = '失败'; alert('保存失败: ' + (e.message || '检查网络')); }
+}
+
+function togglePreview() {
+  var preview = document.getElementById('preview-pane');
+  var edit = document.getElementById('edit-pane');
+  if (!showingPreview) {
+    preview.style.display = 'block';
+    edit.style.flex = '1';
+    preview.innerHTML = typeof marked !== 'undefined' ? marked.parse(cm.getValue()) : cm.getValue().replace(/\n/g,'<br>');
+    showingPreview = true;
+  } else {
+    preview.style.display = 'none';
+    edit.style.flex = '2';
+    showingPreview = false;
   }
 }
 
-// ====== 文件弹窗 ======
+// === 文件弹窗 ===
 async function openModal() {
   document.getElementById('file-modal').style.display = 'flex';
-  document.getElementById('modal-list').innerHTML = '<p style="color:#666;text-align:center;padding:30px">加载中...</p>';
+  document.getElementById('modal-list').innerHTML = '<p style="color:#888;text-align:center;padding:30px">加载中...</p>';
   try {
-    var r = await fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/trees/' + BRANCH + '?recursive=1', {
-      headers: { 'Authorization': 'token ' + tok() }
-    });
-    var d = await r.json();
-    allFiles = (d.tree || []).filter(function(f){ return f.path.startsWith('wiki/') && f.path.endsWith('.md'); });
+    var r = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/git/trees/' + BRANCH + '?recursive=1', { headers: { 'Authorization': 'token ' + tok() } });
+    allFiles = ((await r.json()).tree || []).filter(function(f){ return f.path.startsWith('wiki/') && f.path.endsWith('.md'); });
     renderList();
-  } catch(e) {
-    document.getElementById('modal-list').innerHTML = '<p style="color:#c53030;text-align:center;padding:30px">加载失败</p>';
-  }
+  } catch(e) { document.getElementById('modal-list').innerHTML = '<p style="color:#dc3545;text-align:center;padding:30px">加载失败</p>'; }
 }
 
 function renderList() {
-  var html = allFiles.length === 0 ? '<p style="color:#999;text-align:center;padding:30px">暂无文件</p>' :
-    allFiles.map(function(f){
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:3px" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">' +
-        '<span style="font:13px monospace;color:#333;flex:1">' + f.path + '</span>' +
-        '<button style="padding:4px 10px;border:1px solid #0366d6;border-radius:3px;color:#0366d6;background:#fff;cursor:pointer;font-size:12px;margin:0 4px" onclick="openFile(\'' + f.path.replace(/'/g,"\\'") + '\')">编辑</button>' +
-        '<button style="padding:4px 10px;border:1px solid #dc3545;border-radius:3px;color:#dc3545;background:#fff;cursor:pointer;font-size:12px" onclick="delFile(\'' + f.path.replace(/'/g,"\\'") + '\')">删除</button>' +
-        '</div>';
-    }).join('');
-  document.getElementById('modal-list').innerHTML = html;
+  document.getElementById('modal-list').innerHTML = allFiles.length === 0
+    ? '<p style="color:#888;text-align:center;padding:30px">暂无</p>'
+    : allFiles.map(function(f){ return '<div class="file-row"><span>' + f.path + '</span><div><button class="btn-edit" onclick="openFile(\'' + f.path.replace(/'/g,"\\'") + '\')">编辑</button><button class="btn-del" onclick="delFile(\'' + f.path.replace(/'/g,"\\'") + '\')">删除</button></div></div>'; }).join('');
 }
 
-function openFile(p) {
-  document.getElementById('path-input').value = p;
-  load(p);
-  closeModal();
-}
-
-async function delFile(p) {
-  if (!confirm('删除 ' + p + ' ？')) return;
-  var r = await api(enc(p));
-  if (r.ok) {
-    var sha = (await r.json()).sha;
-    await api(enc(p), { method: 'DELETE', body: JSON.stringify({ message: 'Delete ' + p, sha: sha, branch: BRANCH }) });
-    allFiles = allFiles.filter(function(f){ return f.path !== p; });
-    renderList();
-  }
-}
-
-function createNew() {
-  var p = document.getElementById('modal-new').value.trim();
-  if (!p) { alert('请输入路径'); return; }
-  if (!p.endsWith('.md')) p += '.md';
-  document.getElementById('path-input').value = p;
-  editor.setMarkdown('');
-  closeModal();
-}
-
+function openFile(p) { document.getElementById('path-input').value = p; loadFile(p); closeModal(); }
+async function delFile(p) { if (!confirm('删除 ' + p + ' ？')) return; var r = await api(enc(p)); if (r.ok) { var sha = (await r.json()).sha; await api(enc(p), { method: 'DELETE', body: JSON.stringify({ message: 'Delete ' + p, sha: sha, branch: BRANCH }) }); allFiles = allFiles.filter(function(f){ return f.path !== p; }); renderList(); } }
+function createNew() { var p = document.getElementById('modal-new').value.trim(); if (!p) { alert('请输入路径'); return; } if (!p.endsWith('.md')) p += '.md'; document.getElementById('path-input').value = p; cm.setValue(''); closeModal(); }
 function closeModal() { document.getElementById('file-modal').style.display = 'none'; }
 
-// ====== 初始化 ======
-function initEditor() {
-  if (typeof toastui === 'undefined') {
-    document.getElementById('editor-area').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c53030;font-size:15px"><p>编辑器加载失败，请刷新页面重试</p></div>';
-    return;
-  }
-  var Editor = toastui.Editor;
-  editor = new Editor({
-    el: document.getElementById('editor-area'),
-    height: '100%',
-    initialEditType: 'markdown',
-    previewStyle: 'vertical',
-    usageStatistics: false,
-    toolbarItems: [
-      ['heading', 'bold', 'italic', 'strike'],
-      ['hr', 'quote'],
-      ['ul', 'ol', 'task'],
-      ['table', 'image', 'link'],
-      ['code', 'codeblock']
-    ]
-  });
-
-  // Ctrl+S
-  document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save(); }
-  });
-
-  // 字数
-  editor.on('change', function() {
-    document.getElementById('status').textContent = editor.getMarkdown().length + ' 字';
-  });
-}
-
+// === 初始化 ===
 document.addEventListener('DOMContentLoaded', function() {
   var t = tok();
   if (!t) return;
-
   fetch('https://api.github.com/user', { headers: { 'Authorization': 'token ' + t } })
     .then(function(r) {
       if (!r.ok) { clearTok(); return; }
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('editor-page').style.display = 'flex';
-      initEditor();
-
-      document.getElementById('open-btn').onclick = openModal;
-
-      var params = new URLSearchParams(location.search);
-      var path = params.get('path');
-      if (path) {
-        document.getElementById('path-input').value = path;
-        load(path);
-      }
+      initCM();
+      var p = new URLSearchParams(location.search).get('path');
+      if (p) { document.getElementById('path-input').value = p; loadFile(p); }
     });
 });
 </script>
