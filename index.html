@@ -84,22 +84,6 @@
 </head>
 <body>
   <div id="app">加载中...</div>
-  
-  <!-- 悬浮按钮组 -->
-  <div class="fab-container">
-    <!-- 新建文章按钮 -->
-    <button class="fab-btn new-btn" id="new-btn" title="新建文章">
-      <svg viewBox="0 0 24 24">
-        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-      </svg>
-    </button>
-    <!-- 编辑按钮 -->
-    <button class="fab-btn edit-btn" id="edit-btn" title="编辑此页面">
-      <svg viewBox="0 0 24 24">
-        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-      </svg>
-    </button>
-  </div>
 
   <script>
     window.$docsify = {
@@ -107,97 +91,59 @@
       repo: 'https://github.com/Archercool/wiki-editor',
       loadSidebar: true,
       subMaxLevel: 2,
-      search: {
-        placeholder: '搜索知识库',
-        noData: '没有找到结果',
-        depth: 3
-      },
+      search: { placeholder: '搜索知识库', noData: '没有找到结果', depth: 3 },
       auto2top: true,
-      homepage: 'HOME.md'
-    }
+      homepage: 'HOME.md',
+      plugins: [function(hook) {
+        var done = false;
+        hook.doneEach(function() {
+          var sidebar = document.querySelector('.sidebar');
+          if (!sidebar) return;
+
+          // 动态加载侧边栏内容
+          if (!done) {
+            done = true;
+            var nav = document.querySelector('.sidebar-nav');
+            fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                var files = (data.tree || []).filter(function(f) { return f.path.startsWith('wiki/') && f.path.endsWith('.md'); });
+                var groups = {};
+                files.forEach(function(f) {
+                  var p = f.path.replace('wiki/', '').split('/');
+                  if (p.length >= 2) {
+                    if (!groups[p[0]]) groups[p[0]] = [];
+                    groups[p[0]].push({ name: decodeURIComponent(p[p.length-1].replace('.md','')), path: f.path });
+                  }
+                });
+                var html = '- [首页](/)\n';
+                Object.keys(groups).sort().forEach(function(c) {
+                  html += '- **' + c + '**\n';
+                  groups[c].forEach(function(a) { html += '  - [' + a.name + '](' + a.path + ')\n'; });
+                });
+                nav.innerHTML = window.Docsify.util.parser(html);
+              });
+          }
+
+          // 注入底部按钮
+          if (document.getElementById('sidebar-toggle')) return;
+          sidebar.style.position = 'relative';
+          sidebar.style.paddingBottom = '50px';
+          var bar = document.createElement('div');
+          bar.id = 'sidebar-bottombar';
+          bar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#fff;border-top:1px solid #eee;';
+          bar.innerHTML = '<button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;font-size:18px;">☰</button>' +
+            '<a href="edit.html" id="login-link-sidebar" style="display:none;background:#24292e;color:#fff;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:13px;">编辑</a>';
+          sidebar.appendChild(bar);
+          document.getElementById('sidebar-toggle').onclick = function() {
+            var l = document.getElementById('login-link-sidebar');
+            l.style.display = l.style.display === 'none' ? 'inline' : 'none';
+          };
+        });
+      }]
+    };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
-  <script>
-    // 动态构建侧边栏
-    (function() {
-      var orig = window.$docsify || {};
-      orig.plugins = [function(hook) {
-        hook.ready(function() {
-          var nav = document.querySelector('.sidebar-nav');
-          if (!nav) return setTimeout(function() { hook.ready(arguments.callee); }, 500);
-          
-          fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              var files = (data.tree || []).filter(function(f) {
-                return f.path.startsWith('wiki/') && f.path.endsWith('.md');
-              });
-              
-              var groups = {};
-              files.forEach(function(f) {
-                var parts = f.path.replace('wiki/', '').split('/');
-                if (parts.length >= 2) {
-                  var cat = parts[0];
-                  if (!groups[cat]) groups[cat] = [];
-                  groups[cat].push({ name: decodeURIComponent(parts[parts.length-1].replace('.md','')), path: f.path });
-                }
-              });
-              
-              var sidebar = '- [首页](/)\n';
-              Object.keys(groups).sort().forEach(function(cat) {
-                sidebar += '- **' + cat + '**\n';
-                groups[cat].forEach(function(article) {
-                  sidebar += '  - [' + article.name + '](' + article.path + ')\n';
-                });
-              });
-              
-              var loading = document.getElementById('sidebar-dyn');
-              if (loading) loading.remove();
-              
-              var style = document.createElement('style');
-              style.textContent = '.sidebar-nav { white-space: normal !important; }';
-              document.head.appendChild(style);
-              nav.innerHTML = window.Docsify.util.parser(sidebar);
-              
-              // 注入侧边栏底部按钮
-              var bottombar = document.createElement('div');
-              bottombar.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#fff;border-top:1px solid #eee;';
-              bottombar.innerHTML = '<button id="sidebar-toggle" style="background:none;border:none;cursor:pointer;font-size:20px;padding:4px 8px;">☰</button>' +
-                '<a href="edit.html" id="login-link-sidebar" style="display:none;background:#24292e;color:#fff;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:13px;">编辑</a>';
-              nav.parentNode.style.position = 'relative';
-              nav.parentNode.style.paddingBottom = '50px';
-              nav.parentNode.appendChild(bottombar);
-              
-              document.getElementById('sidebar-toggle').onclick = function() {
-                var link = document.getElementById('login-link-sidebar');
-                link.style.display = link.style.display === 'none' ? 'inline' : 'none';
-              };
-            });
-        });
-      }];
-      window.$docsify = orig;
-    })();
-  </script>
-  
-  <script>
-    // 新建文章按钮功能
-    document.getElementById('new-btn').addEventListener('click', function() {
-      window.location.href = 'edit.html?new=true';
-    });
-
-    // 编辑按钮功能
-    document.getElementById('edit-btn').addEventListener('click', function() {
-      var hash = window.location.hash;
-      var path = hash.replace('#/', '').replace('.md', '');
-      
-      if (!path || path === '' || path === '/') {
-        alert('请先打开一篇文章再编辑');
-        return;
-      }
-      
-      window.location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
-    });
-  </script>
 </body>
 </html>
