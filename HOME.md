@@ -16,16 +16,8 @@
 
 1. 点击左侧导航打开文章
 2. 点击右下角 ✏️ 按钮进入编辑
-3. 输入 GitHub Token 完成认证
+3. 点击「GitHub 登录」完成认证
 4. 编辑并保存
-
----
-
-## 获取 Token
-
-1. 访问 [GitHub Token 页面](https://github.com/settings/tokens)
-2. 生成新 Token，勾选 `repo` 权限
-3. 复制 Token 到编辑器
 
 ---
 

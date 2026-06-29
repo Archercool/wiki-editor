@@ -64,8 +64,6 @@
         hook.doneEach(function() {
           var sidebar = document.querySelector('.sidebar');
           if (!sidebar) return;
-
-          // 动态加载文章列表
           if (!done) {
             done = true;
             var nav = document.querySelector('.sidebar-nav');
@@ -89,8 +87,6 @@
                 nav.innerHTML = window.Docsify.util.parser(html);
               });
           }
-
-
         });
       }]
     };
