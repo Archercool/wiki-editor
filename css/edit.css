@@ -136,6 +136,75 @@ body {
   border-top: 1px solid #eee;
 }
 
+/* ==================== OAuth 样式 ==================== */
+
+.github-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 20px;
+  background: #24292e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.github-btn:hover {
+  background: #2f363d;
+}
+
+.github-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.auth-code-box {
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 16px 0;
+  text-align: center;
+}
+
+.auth-url {
+  display: block;
+  color: #0366d6;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+
+.auth-url:hover {
+  text-decoration: underline;
+}
+
+.auth-code {
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: bold;
+  color: #24292e;
+  letter-spacing: 4px;
+  padding: 12px;
+  background: white;
+  border: 2px dashed #0366d6;
+  border-radius: 4px;
+  user-select: all;
+}
+
+.auth-status {
+  text-align: center;
+  color: #0366d6;
+  font-size: 14px;
+  padding: 8px;
+}
+
 /* ==================== 按钮样式 ==================== */
 
 .primary-btn {
