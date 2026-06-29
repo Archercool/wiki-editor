@@ -129,26 +129,31 @@
           fetch('https://api.github.com/repos/Archercool/wiki-editor/git/trees/main?recursive=1')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-              var files = (data.tree || []).filter(function(f) {
-                return f.path.startsWith('wiki/') && f.path.endsWith('.md');
+              var tree = (data.tree || []).filter(function(f) {
+                return f.path.startsWith('wiki/');
               });
-              var groups = {};
-              files.forEach(function(f) {
+              var folders = {};
+              tree.forEach(function(f) {
                 var parts = f.path.replace('wiki/', '').split('/');
-                if (parts.length >= 2) {
-                  var cat = parts[0];
+                if (parts.length < 2) return;
+                var cat = parts[0];
+                if (!folders[cat]) folders[cat] = [];
+                if (f.path.endsWith('.md') && parts.length >= 2) {
                   var name = decodeURIComponent(parts[parts.length - 1].replace('.md', ''));
-                  if (!groups[cat]) groups[cat] = [];
-                  groups[cat].push({ name: name, path: f.path });
+                  folders[cat].push({ name: name, path: f.path });
                 }
               });
               var html = '<ul class="sidebar-nav"><li><a href="#/">首页</a></li>';
-              Object.keys(groups).sort().forEach(function(cat) {
+              Object.keys(folders).sort().forEach(function(cat) {
                 html += '<li><p class="sidebar-title">' + cat + '</p><ul>';
-                groups[cat].forEach(function(a) {
-                  var link = '#/' + a.path.replace('.md', '');
-                  html += '<li><a href="' + link + '">' + a.name + '</a></li>';
-                });
+                if (folders[cat].length === 0) {
+                  html += '<li><span style="color:#999;font-size:12px">（空）</span></li>';
+                } else {
+                  folders[cat].forEach(function(a) {
+                    var link = '#/' + a.path.replace('.md', '');
+                    html += '<li><a href="' + link + '">' + a.name + '</a></li>';
+                  });
+                }
                 html += '</ul></li>';
               });
               html += '</ul>';
