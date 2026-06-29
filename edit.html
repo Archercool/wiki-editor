@@ -4,59 +4,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>知识库编辑器</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;display:flex;flex-direction:column;background:#263238}
-.bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#1a1a2e;border-bottom:1px solid #333;flex-shrink:0}
-.bar .logo{font-weight:700;font-size:14px;color:#e0e0e0;text-decoration:none;white-space:nowrap}
-.bar input{flex:1;min-width:120px;padding:6px 8px;border:1px solid #444;border-radius:3px;font:13px monospace;background:#2d2d44;color:#e0e0e0}
-.bar input:focus{outline:none;border-color:#569cd6}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;display:flex;flex-direction:column;background:#fff}
+.bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#24292e;border-bottom:1px solid #333;flex-shrink:0}
+.bar .logo{font-weight:700;font-size:14px;color:#fff;text-decoration:none;white-space:nowrap}
+.bar input{flex:1;min-width:120px;padding:6px 8px;border:1px solid #444;border-radius:3px;font:13px monospace;background:#fff;color:#333}
+.bar input:focus{outline:none;border-color:#0366d6}
 .bar button{padding:6px 12px;border:none;border-radius:3px;cursor:pointer;font-size:12px;white-space:nowrap}
-.btn-save{background:#0e639c;color:#fff}
-.btn-save:hover{background:#1177bb}
-.btn-out{background:#333;color:#ccc;border:1px solid #444!important}
-.btn-out:hover{background:#444}
-#status{font-size:11px;color:#888;min-width:50px}
+.btn-save{background:#28a745;color:#fff}
+.btn-save:hover{background:#2c974b}
+.btn-out{background:#fafbfc;color:#24292e;border:1px solid #d1d5da!important}
+.btn-out:hover{background:#e9ecef}
+#status{font-size:11px;color:#999;min-width:50px}
 .main{flex:1;display:flex;overflow:hidden}
-.editor-pane{flex:1;overflow:hidden;border-right:1px solid #333;display:flex;flex-direction:column}
-.editor-pane .CodeMirror{flex:1;font-size:14px}
-.preview-pane{flex:1;overflow-y:auto;padding:20px;background:#1e1e2e;color:#d4d4d4;display:none}
-.preview-pane h1,.preview-pane h2,.preview-pane h3{color:#fff;margin:16px 0 8px}
-.preview-pane p{line-height:1.7;margin:8px 0}
-.preview-pane code{background:#2d2d44;padding:2px 6px;border-radius:3px;font-size:13px;color:#ce9178}
-.preview-pane pre{background:#1a1a2e;padding:12px;border-radius:4px;overflow-x:auto}
-.preview-pane pre code{background:none;padding:0}
-.preview-pane ul,.preview-pane ol{padding-left:24px}
-.preview-pane li{margin:4px 0}
-.preview-pane a{color:#569cd6}
-.preview-pane blockquote{border-left:3px solid #444;padding:4px 12px;color:#999;margin:8px 0}
-.preview-pane table{border-collapse:collapse;width:100%}
-.preview-pane th,.preview-pane td{border:1px solid #444;padding:6px 10px;text-align:left}
-.preview-pane th{background:#2d2d44}
-.preview-pane hr{border:none;border-top:1px solid #333;margin:16px 0}
-.editor-label{font-size:11px;color:#888;padding:4px 12px;background:#1a1a2e;border-bottom:1px solid #333;text-transform:uppercase;letter-spacing:1px}
-.login-page{display:flex;align-items:center;justify-content:center;height:100vh;background:#1a1a2e}
-.login-box{background:#263238;padding:36px;border-radius:8px;box-shadow:0 2px 20px rgba(0,0,0,.3);width:380px;max-width:90%;text-align:center}
-.login-box h2{margin-bottom:6px;color:#e0e0e0}
-.login-box p{color:#888;margin-bottom:18px;font-size:14px}
+.editor-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.EditorContainer,.EasyMDEContainer,.CodeMirror{flex:1;height:auto!important}
+.login-page{display:flex;align-items:center;justify-content:center;height:100vh;background:#f6f8fa}
+.login-box{background:#fff;padding:36px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.12);width:380px;max-width:90%;text-align:center}
+.login-box h2{margin-bottom:6px;color:#24292e}
+.login-box p{color:#586069;margin-bottom:18px;font-size:14px}
 .gh-btn{display:inline-flex;align-items:center;gap:8px;width:100%;padding:11px;background:#24292e;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;justify-content:center}
 .gh-btn:hover{background:#2f363d}
-.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
-.modal-box{background:#263238;border-radius:8px;width:560px;max-width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,.4)}
-.modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #333}
-.modal-h h3{font-size:15px;color:#e0e0e0}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#666}
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+.modal-box{background:#fff;border-radius:6px;width:560px;max-width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,.2)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #e1e4e8}
+.modal-h h3{font-size:15px;color:#24292e}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#6a737d}
 .modal-body{flex:1;overflow-y:auto;padding:10px}
-.modal-foot{padding:10px 18px;border-top:1px solid #333}
-.modal-foot input{width:100%;padding:8px;border:1px solid #444;border-radius:3px;font-size:13px;background:#1a1a2e;color:#e0e0e0;margin-bottom:8px;box-sizing:border-box}
+.modal-foot{padding:10px 18px;border-top:1px solid #e1e4e8}
+.modal-foot input{width:100%;padding:8px;border:1px solid #d1d5da;border-radius:3px;font-size:13px;background:#fff;color:#333;margin-bottom:8px;box-sizing:border-box}
 .file-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:3px;transition:background .2s}
-.file-row:hover{background:#2d2d44}
-.file-row span{font:13px monospace;color:#d4d4d4;flex:1}
+.file-row:hover{background:#f6f8fa}
+.file-row span{font:13px monospace;color:#24292e;flex:1}
 .file-row button{padding:3px 8px;border-radius:3px;font-size:11px;cursor:pointer;background:none;margin:0 2px}
-.btn-edit{border:1px solid #569cd6;color:#569cd6}
-.btn-del{border:1px solid #dc3545;color:#dc3545}
+.btn-edit{border:1px solid #0366d6;color:#0366d6}
+.btn-del{border:1px solid #d73a49;color:#d73a49}
+/* EasyMDE 暗色工具栏适配 */
+.editor-toolbar{background:#f6f8fa;border-color:#e1e4e8}
+.editor-toolbar button{color:#586069!important}
+.editor-toolbar button:hover{background:#e9ecef!important}
+.editor-toolbar button.active{background:#0366d6!important;color:#fff!important}
+.CodeMirror{border-color:#e1e4e8!important}
+/* 预览面板暗色 */
+ EasyMDE预览用 GitHub 样式 */
+.markdown-body{padding:20px;max-width:800px}
 </style>
 </head>
 <body>
@@ -75,7 +68,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
 <div id="editor-page" style="display:none;height:100vh;flex-direction:column">
   <div class="bar">
     <a href="index.html" class="logo">Wiki</a>
-    <span style="color:#555">/</span>
+    <span style="color:#999">/</span>
     <input type="text" id="path-input" placeholder="路径，如 wiki/AI/新文章.md">
     <span id="status"></span>
     <button class="btn-out" onclick="togglePreview()">预览</button>
@@ -84,11 +77,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
     <button class="btn-out" onclick="logout()">退出</button>
   </div>
   <div class="main">
-    <div class="editor-pane" id="edit-pane">
-      <div class="editor-label">Markdown</div>
+    <div class="editor-wrap">
       <textarea id="md-editor"></textarea>
     </div>
-    <div class="preview-pane" id="preview-pane"></div>
   </div>
 </div>
 
@@ -103,18 +94,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/mode/overlay.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/gfm/gfm.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.1.4/marked.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <script>
 var CLIENT_ID = 'Ov23ctCfpMxGeAINGXGW';
 var REDIRECT = 'https://archercool.github.io/wiki-editor/callback.html';
 var OWNER = 'Archercool', REPO = 'wiki-editor', BRANCH = 'main';
-var cm = null;
-var showingPreview = false;
+var easyMDE = null;
 var allFiles = [];
 
 function tok() { return localStorage.getItem('wiki_editor_token'); }
@@ -132,20 +117,34 @@ function api(p, opt) {
   return fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + p, { method: opt ? (opt.method || 'GET') : 'GET', headers: h, body: opt ? opt.body : undefined });
 }
 
-function initCM() {
-  cm = CodeMirror.fromTextArea(document.getElementById('md-editor'), {
-    mode: 'gfm',
-    lineNumbers: true,
-    lineWrapping: true,
-    theme: 'material-darker',
-    viewportMargin: Infinity,
-    extraKeys: {
-      'Ctrl-S': function() { save(); },
-      'Cmd-S': function() { save(); }
+function initEditor() {
+  easyMDE = new EasyMDE({
+    element: document.getElementById('md-editor'),
+    spellChecker: false,
+    status: false,
+    toolbar: [
+      'bold', 'italic', 'heading', '|',
+      'code', 'quote', 'unordered-list', 'ordered-list', '|',
+      'link', 'image', 'table', 'horizontal-rule', '|',
+      'preview', 'side-by-side', 'fullscreen', '|',
+      'guide'
+    ],
+    shortcuts: {
+      save: 'Cmd-S',
+     保存: 'Ctrl-S'
+    },
+    renderingConfig: {
+      codeSyntaxHighlighting: false
     }
   });
-  cm.on('change', function() {
-    document.getElementById('status').textContent = cm.getValue().length + ' 字';
+
+  easyMDE.codemirror.on('change', function() {
+    document.getElementById('status').textContent = easyMDE.value().length + ' 字';
+  });
+
+  easyMDE.codemirror.setOption('extraKeys', {
+    'Ctrl-S': function() { save(); },
+    'Cmd-S': function() { save(); }
   });
 }
 
@@ -154,8 +153,8 @@ async function loadFile(p) {
   st.textContent = '加载中...';
   try {
     var r = await api(enc(p));
-    if (r.ok) { cm.setValue(dec((await r.json()).content)); st.textContent = ''; }
-    else { cm.setValue(''); st.textContent = '新文件'; }
+    if (r.ok) { easyMDE.value(dec((await r.json()).content)); st.textContent = ''; }
+    else { easyMDE.value(''); st.textContent = '新文件'; }
   } catch(e) { st.textContent = '加载失败'; }
 }
 
@@ -164,7 +163,7 @@ async function save() {
   if (!p) { alert('请输入路径'); return; }
   if (!p.endsWith('.md')) p += '.md';
   document.getElementById('path-input').value = p;
-  var md = cm.getValue();
+  var md = easyMDE.value();
   if (!md.trim()) { alert('内容不能为空'); return; }
   var st = document.getElementById('status');
   st.textContent = '保存中...';
@@ -180,20 +179,7 @@ async function save() {
   } catch(e) { st.textContent = '失败'; alert('保存失败: ' + (e.message || '检查网络')); }
 }
 
-function togglePreview() {
-  var preview = document.getElementById('preview-pane');
-  var edit = document.getElementById('edit-pane');
-  if (!showingPreview) {
-    preview.style.display = 'block';
-    edit.style.flex = '1';
-    preview.innerHTML = typeof marked !== 'undefined' ? marked.parse(cm.getValue()) : cm.getValue().replace(/\n/g,'<br>');
-    showingPreview = true;
-  } else {
-    preview.style.display = 'none';
-    edit.style.flex = '2';
-    showingPreview = false;
-  }
-}
+function togglePreview() { easyMDE.togglePreview(); }
 
 async function openModal() {
   document.getElementById('file-modal').style.display = 'flex';
@@ -202,7 +188,7 @@ async function openModal() {
     var r = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/git/trees/' + BRANCH + '?recursive=1', { headers: { 'Authorization': 'token ' + tok() } });
     allFiles = ((await r.json()).tree || []).filter(function(f){ return f.path.startsWith('wiki/') && f.path.endsWith('.md'); });
     renderList();
-  } catch(e) { document.getElementById('modal-list').innerHTML = '<p style="color:#dc3545;text-align:center;padding:30px">加载失败</p>'; }
+  } catch(e) { document.getElementById('modal-list').innerHTML = '<p style="color:#d73a49;text-align:center;padding:30px">加载失败</p>'; }
 }
 
 function renderList() {
@@ -213,7 +199,7 @@ function renderList() {
 
 function openFile(p) { document.getElementById('path-input').value = p; loadFile(p); closeModal(); }
 async function delFile(p) { if (!confirm('删除 ' + p + ' ？')) return; var r = await api(enc(p)); if (r.ok) { var sha = (await r.json()).sha; await api(enc(p), { method: 'DELETE', body: JSON.stringify({ message: 'Delete ' + p, sha: sha, branch: BRANCH }) }); allFiles = allFiles.filter(function(f){ return f.path !== p; }); renderList(); } }
-function createNew() { var p = document.getElementById('modal-new').value.trim(); if (!p) { alert('请输入路径'); return; } if (!p.endsWith('.md')) p += '.md'; document.getElementById('path-input').value = p; cm.setValue(''); closeModal(); }
+function createNew() { var p = document.getElementById('modal-new').value.trim(); if (!p) { alert('请输入路径'); return; } if (!p.endsWith('.md')) p += '.md'; document.getElementById('path-input').value = p; easyMDE.value(''); closeModal(); }
 function closeModal() { document.getElementById('file-modal').style.display = 'none'; }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -224,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!r.ok) { clearTok(); return; }
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('editor-page').style.display = 'flex';
-      initCM();
+      initEditor();
       var p = new URLSearchParams(location.search).get('path');
       if (p) { document.getElementById('path-input').value = p; loadFile(p); }
     });
