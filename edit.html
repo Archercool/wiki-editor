@@ -262,9 +262,10 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('editor-page').style.display = 'flex';
       initEditor();
-      loadFolders();
-      var p = new URLSearchParams(location.search).get('path');
-      if (p) loadFile(p);
+      loadFolders().then(function() {
+        var p = new URLSearchParams(location.search).get('path');
+        if (p) loadFile(p);
+      });
     });
 });
 </script>
