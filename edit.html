@@ -4,121 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>知识库编辑器</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vditor@latest/dist/index.css">
-  <link rel="stylesheet" href="css/edit.css">
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-    #login-page { display: flex; align-items: center; justify-content: center; height: 100vh; }
-    #editor-page { display: none; height: 100vh; flex-direction: column; }
-    #vditor { width: 100%; flex: 1; }
-    .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; }
-    .top-bar input { flex: 1; margin: 0 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; }
-    .top-bar button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-left: 8px; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #login-page { display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f5f5; }
+    #editor-page { display: flex; flex-direction: column; height: 100vh; }
+    .top-bar { display: flex; align-items: center; padding: 8px 16px; background: #fff; border-bottom: 1px solid #e0e0e0; gap: 8px; }
+    .top-bar input { flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 14px; }
+    .top-bar button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; white-space: nowrap; }
     .btn-save { background: #0366d6; color: #fff; }
-    .btn-save:hover { background: #0256b9; }
     .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-    .btn-secondary:hover { background: #e8e8e8; }
     .btn-danger { background: #dc3545; color: #fff; }
-    .btn-danger:hover { background: #c82333; }
-    #status { margin: 0 12px; font-size: 13px; }
+    .btn-new { background: #28a745; color: #fff; }
+    #status { min-width: 80px; font-size: 13px; color: #666; }
+    #editor-area { flex: 1; display: flex; overflow: hidden; }
+    #md-editor { flex: 1; padding: 16px; border: none; resize: none; font-family: monospace; font-size: 14px; line-height: 1.6; outline: none; }
+    #md-preview { flex: 1; padding: 16px; overflow-y: auto; background: #fff; border-left: 1px solid #e0e0e0; display: none; }
     .login-box { background: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); text-align: center; max-width: 360px; }
-    .login-box h2 { margin-bottom: 16px; }
+    .login-box h2 { margin-bottom: 12px; }
     .login-box p { color: #666; margin-bottom: 20px; }
+    .github-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; background: #24292e; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+    .github-btn:hover { background: #2f363d; }
+    select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; }
   </style>
 </head>
 <body>
-
-  <!-- 登录页 -->
   <div id="login-page">
     <div class="login-box">
       <h2>知识库编辑器</h2>
       <p>使用 GitHub 账号登录后即可编辑</p>
-      <button id="login-btn" class="github-btn" style="width:100%">
+      <button id="login-btn" class="github-btn">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
         使用 GitHub 账号登录
       </button>
     </div>
   </div>
 
-  <!-- 编辑页 -->
   <div id="editor-page">
     <div class="top-bar">
       <a href="index.html" style="font-weight:bold;text-decoration:none;color:#333">知识库</a>
       <span style="color:#ccc">/</span>
       <input type="text" id="path-input" placeholder="文件路径，如 wiki/AI/机器学习.md">
       <span id="status"></span>
-      <button class="btn-secondary" id="btn-preview">预览</button>
-      <button class="btn-save" id="btn-save">保存</button>
-      <button class="btn-danger" id="btn-logout">退出</button>
+      <button class="btn-secondary" onclick="togglePreview()">预览</button>
+      <button class="btn-save" onclick="saveFile()">保存</button>
+      <button class="btn-danger" onclick="logout()">退出</button>
     </div>
-    <div id="vditor"></div>
+    <div id="editor-area">
+      <textarea id="md-editor" placeholder="在此输入 Markdown 内容..."></textarea>
+      <div id="md-preview"></div>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vditor@latest/dist/js/min/vditor.min.js"></script>
   <script>
-    var editor = null;
-    var currentPath = null;
+    var isPreview = false;
 
     function getToken() {
       return localStorage.getItem('wiki_editor_token') || sessionStorage.getItem('wiki_editor_token');
     }
 
+    var CLIENT_ID = 'Iv23lib96sWmtpVWoZfE';
+    var REDIRECT = 'https://archercool.github.io/wiki-editor/callback.html';
+
     function login() {
-      window.location.href = 'https://github.com/login/oauth/authorize?client_id=Iv23lib96sWmtpVWoZfE&redirect_uri=' + encodeURIComponent('https://archercool.github.io/wiki-editor/callback.html') + '&scope=repo';
+      window.location.href = 'https://github.com/login/oauth/authorize?client_id=' + CLIENT_ID + '&redirect_uri=' + encodeURIComponent(REDIRECT) + '&scope=repo';
     }
 
     function logout() {
       localStorage.removeItem('wiki_editor_token');
       sessionStorage.removeItem('wiki_editor_token');
-      location.reload();
+      window.location.reload();
     }
 
-    function showEditor() {
-      document.getElementById('login-page').style.display = 'none';
-      document.getElementById('editor-page').style.display = 'flex';
-    }
+    function togglePreview() {
+      var preview = document.getElementById('md-preview');
+      var textarea = document.getElementById('md-editor');
+      var btn = event.target;
 
-    function startEditor(content) {
-      var el = document.getElementById('vditor');
-      el.innerHTML = '';
-
-      editor = new Vditor('vditor', {
-        mode: 'sv',
-        toolbar: ['undo', 'redo', '|', 'bold', 'italic', 'strike', '|', 'headings', '|', 'list', 'ordered-list', '|', 'code', 'quote', '|', 'link', '|', 'edit-mode', 'preview', '|', 'fullscreen'],
-        cache: { enable: false },
-        counter: { enable: true },
-        theme: 'classic',
-        lang: 'zh_CN',
-        height: 'calc(100vh - 44px)',
-        outline: { enable: false },
-        after: function() {
-          editor.setValue(content || '');
-        },
-        input: function() {
-          document.getElementById('status').textContent = editor.getValue().length + ' 字';
-        }
-      });
-    }
-
-    async function loadAndEdit(path) {
-      var status = document.getElementById('status');
-      status.textContent = '加载中...';
-      try {
-        var resp = await fetch('https://api.github.com/repos/Archercool/wiki-editor/contents/' + path, {
-          headers: { 'Authorization': 'token ' + getToken(), 'Accept': 'application/vnd.github.v3+json' }
-        });
-        if (resp.ok) {
-          var data = await resp.json();
-          var content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-          startEditor(content);
-          status.textContent = '';
-        } else {
-          startEditor('');
-          status.textContent = '';
-        }
-      } catch(e) {
-        startEditor('');
-        status.textContent = '加载失败，已创建空白文档';
+      if (!isPreview) {
+        preview.style.display = 'block';
+        textarea.style.flex = '1';
+        // 简单渲染 Markdown
+        var md = textarea.value;
+        md = md.replace(/^### (.+)/gm, '<h3>$1</h3>');
+        md = md.replace(/^## (.+)/gm, '<h2>$1</h2>');
+        md = md.replace(/^# (.+)/gm, '<h1>$1</h1>');
+        md = md.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        md = md.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        md = md.replace(/`(.+?)`/g, '<code>$1</code>');
+        md = md.replace(/- (.+)/g, '<li>$1</li>');
+        md = md.replace(/\n/g, '<br>');
+        preview.innerHTML = md;
+        btn.textContent = '编辑';
+        isPreview = true;
+      } else {
+        preview.style.display = 'none';
+        textarea.style.flex = '2';
+        btn.textContent = '预览';
+        isPreview = false;
       }
     }
 
@@ -128,18 +110,18 @@
       if (!path) { alert('请输入文件路径'); return; }
       if (!path.endsWith('.md')) path += '.md';
 
-      var content = editor ? editor.getValue() : '';
-      var status = document.getElementById('status');
-      status.textContent = '保存中...';
+      var content = document.getElementById('md-editor').value;
+      if (!content.trim()) { alert('内容不能为空'); return; }
+
+      var st = document.getElementById('status');
+      st.textContent = '保存中...';
 
       try {
         var sha = null;
-        var getResp = await fetch('https://api.github.com/repos/Archercool/wiki-editor/contents/' + path, {
+        var r = await fetch('https://api.github.com/repos/Archercool/wiki-editor/contents/' + path, {
           headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
         });
-        if (getResp.ok) {
-          sha = (await getResp.json()).sha;
-        }
+        if (r.ok) sha = (await r.json()).sha;
 
         var body = { message: 'Update ' + path, content: btoa(unescape(encodeURIComponent(content))), branch: 'main' };
         if (sha) body.sha = sha;
@@ -150,28 +132,33 @@
           body: JSON.stringify(body)
         });
 
-        if (resp.ok) {
-          status.textContent = '保存成功 ✓';
-          currentPath = path;
-          setTimeout(function() { status.textContent = ''; }, 3000);
-        } else {
-          throw new Error('保存失败');
-        }
-      } catch(e) {
-        status.textContent = '保存失败';
-        alert('保存失败: ' + e.message);
-      }
+        if (resp.ok) { st.textContent = '已保存'; setTimeout(function(){ st.textContent = ''; }, 3000); }
+        else throw new Error();
+      } catch(e) { st.textContent = '失败'; alert('保存失败'); }
     }
 
-    // 启动
+    async function loadFile(path) {
+      var token = getToken();
+      var st = document.getElementById('status');
+      st.textContent = '加载中...';
+      try {
+        var resp = await fetch('https://api.github.com/repos/Archercool/wiki-editor/contents/' + path, {
+          headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (resp.ok) {
+          var data = await resp.json();
+          document.getElementById('md-editor').value = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+        }
+        st.textContent = '';
+      } catch(e) { st.textContent = ''; }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       var token = getToken();
-      if (!token) {
-        document.getElementById('login-btn').onclick = login;
-        return;
-      }
+      if (!token) { document.getElementById('login-btn').onclick = login; return; }
 
-      showEditor();
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById('editor-page').style.display = 'flex';
 
       var params = new URLSearchParams(window.location.search);
       var path = params.get('path');
@@ -179,29 +166,11 @@
 
       if (path && !isNew) {
         document.getElementById('path-input').value = path;
-        loadAndEdit(path);
-      } else {
-        startEditor('');
+        loadFile(path);
       }
 
-      document.getElementById('btn-save').onclick = saveFile;
-      document.getElementById('btn-logout').onclick = logout;
-      document.getElementById('btn-preview').onclick = function() {
-        if (!editor) return;
-        if (editor.getMode() === 'sv') {
-          editor.changeEditMode();
-          this.textContent = '编辑';
-        } else {
-          editor.changeMode('sv');
-          this.textContent = '预览';
-        }
-      };
-
       document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-          e.preventDefault();
-          saveFile();
-        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
       });
     });
   </script>
