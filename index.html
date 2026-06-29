@@ -72,10 +72,12 @@
     function tok() { return localStorage.getItem('wiki_editor_token'); }
 
     function editCurrent() {
-      var raw = window.location.hash.replace('#/', '').replace('.md', '');
-      if (!raw || raw === '/') { alert('请先打开一篇文章'); return; }
-      var path = decodeURIComponent(raw);
-      location.href = 'edit.html?path=' + encodeURIComponent(path + '.md');
+      var hash = window.location.hash.replace('#/', '');
+      if (!hash || hash === '/' || hash === 'index.html') { alert('请先打开一篇文章'); return; }
+      var path;
+      try { path = decodeURIComponent(hash); } catch(e) { path = hash; }
+      if (!path.endsWith('.md')) path += '.md';
+      location.href = 'edit.html?path=' + encodeURIComponent(path);
     }
 
     function showFolderModal() {

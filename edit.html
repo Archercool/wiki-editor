@@ -135,7 +135,7 @@ function getFullPath() {
 
 function setPath(fullPath) {
   if (!fullPath) return;
-  fullPath = decodeURIComponent(fullPath);
+  try { fullPath = decodeURIComponent(fullPath); } catch(e) {}
   var parts = fullPath.replace('wiki/', '').split('/');
   if (parts.length >= 2) {
     var folder = 'wiki/' + parts[0];
@@ -201,7 +201,7 @@ function initEditor() {
 async function loadFile(p) {
   var st = document.getElementById('status');
   st.textContent = '加载中...';
-  p = decodeURIComponent(p);
+  try { p = decodeURIComponent(p); } catch(e) {}
   setPath(p);
   try {
     var r = await api(enc(p));
