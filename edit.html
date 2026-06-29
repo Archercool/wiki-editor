@@ -55,6 +55,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     var isPreview = false;
 
@@ -83,17 +84,7 @@
       if (!isPreview) {
         preview.style.display = 'block';
         textarea.style.flex = '1';
-        // 简单渲染 Markdown
-        var md = textarea.value;
-        md = md.replace(/^### (.+)/gm, '<h3>$1</h3>');
-        md = md.replace(/^## (.+)/gm, '<h2>$1</h2>');
-        md = md.replace(/^# (.+)/gm, '<h1>$1</h1>');
-        md = md.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        md = md.replace(/\*(.+?)\*/g, '<em>$1</em>');
-        md = md.replace(/`(.+?)`/g, '<code>$1</code>');
-        md = md.replace(/- (.+)/g, '<li>$1</li>');
-        md = md.replace(/\n/g, '<br>');
-        preview.innerHTML = md;
+        preview.innerHTML = marked.parse(textarea.value);
         btn.textContent = '编辑';
         isPreview = true;
       } else {
