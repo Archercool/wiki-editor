@@ -69,7 +69,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;height:100vh;displa
   <div class="bar">
     <a href="index.html" class="logo">Wiki</a>
     <span style="color:#999">/</span>
-    <input type="text" id="path-input" placeholder="路径，如 wiki/AI/新文章.md">
+    <select id="folder-select" style="padding:5px 8px;border:1px solid #d1d5da;border-radius:3px;font:13px monospace;background:#fff;color:#333;max-width:160px">
+      <option value="">选择文件夹</option>
+    </select>
+    <span style="color:#999">/</span>
+    <input type="text" id="filename-input" placeholder="文件名.md" style="width:160px">
     <span id="status"></span>
     <button class="btn-out" onclick="togglePreview()">预览</button>
     <button class="btn-save" onclick="save()">保存 Ctrl+S</button>
@@ -101,6 +105,7 @@ var REDIRECT = 'https://archercool.github.io/wiki-editor/callback.html';
 var OWNER = 'Archercool', REPO = 'wiki-editor', BRANCH = 'main';
 var easyMDE = null;
 var allFiles = [];
+var folders = [];
 
 function tok() { return localStorage.getItem('wiki_editor_token'); }
 function setTok(t) { localStorage.setItem('wiki_editor_token', t); }
@@ -117,6 +122,55 @@ function api(p, opt) {
   return fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + p, { method: opt ? (opt.method || 'GET') : 'GET', headers: h, body: opt ? opt.body : undefined });
 }
 
+function getFullPath() {
+  var folder = document.getElementById('folder-select').value;
+  var file = document.getElementById('filename-input').value.trim();
+  if (!file) return '';
+  if (!file.endsWith('.md')) file += '.md';
+  return folder ? folder + '/' + file : file;
+}
+
+function setPath(fullPath) {
+  if (!fullPath) return;
+  var parts = fullPath.replace('wiki/', '').split('/');
+  if (parts.length >= 2) {
+    var folder = 'wiki/' + parts[0];
+    var file = parts.slice(1).join('/');
+    document.getElementById('folder-select').value = folder;
+    document.getElementById('filename-input').value = file;
+  } else {
+    document.getElementById('folder-select').value = '';
+    document.getElementById('filename-input').value = fullPath;
+  }
+}
+
+async function loadFolders() {
+  try {
+    var r = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/git/trees/' + BRANCH + '?recursive=1', { headers: { 'Authorization': 'token ' + tok() } });
+    var data = await r.json();
+    var seen = {};
+    (data.tree || []).forEach(function(f) {
+      if (!f.path.startsWith('wiki/')) return;
+      var parts = f.path.replace('wiki/', '').split('/');
+      if (parts.length >= 2) {
+        var folderPath = 'wiki/' + parts[0];
+        if (!seen[folderPath]) {
+          seen[folderPath] = true;
+          folders.push({ name: parts[0], path: folderPath });
+        }
+      }
+    });
+    folders.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    var sel = document.getElementById('folder-select');
+    folders.forEach(function(f) {
+      var opt = document.createElement('option');
+      opt.value = f.path;
+      opt.textContent = f.name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
 function initEditor() {
   easyMDE = new EasyMDE({
     element: document.getElementById('md-editor'),
@@ -129,19 +183,11 @@ function initEditor() {
       'preview', 'side-by-side', 'fullscreen', '|',
       'guide'
     ],
-    shortcuts: {
-      save: 'Cmd-S',
-     保存: 'Ctrl-S'
-    },
-    renderingConfig: {
-      codeSyntaxHighlighting: false
-    }
+    renderingConfig: { codeSyntaxHighlighting: false }
   });
-
   easyMDE.codemirror.on('change', function() {
     document.getElementById('status').textContent = easyMDE.value().length + ' 字';
   });
-
   easyMDE.codemirror.setOption('extraKeys', {
     'Ctrl-S': function() { save(); },
     'Cmd-S': function() { save(); }
@@ -151,6 +197,7 @@ function initEditor() {
 async function loadFile(p) {
   var st = document.getElementById('status');
   st.textContent = '加载中...';
+  setPath(p);
   try {
     var r = await api(enc(p));
     if (r.ok) { easyMDE.value(dec((await r.json()).content)); st.textContent = ''; }
@@ -159,10 +206,8 @@ async function loadFile(p) {
 }
 
 async function save() {
-  var p = document.getElementById('path-input').value.trim();
-  if (!p) { alert('请输入路径'); return; }
-  if (!p.endsWith('.md')) p += '.md';
-  document.getElementById('path-input').value = p;
+  var p = getFullPath();
+  if (!p) { alert('请选择文件夹并输入文件名'); return; }
   var md = easyMDE.value();
   if (!md.trim()) { alert('内容不能为空'); return; }
   var st = document.getElementById('status');
@@ -197,9 +242,15 @@ function renderList() {
     : allFiles.map(function(f){ return '<div class="file-row"><span>' + f.path + '</span><div><button class="btn-edit" onclick="openFile(\'' + f.path.replace(/'/g,"\\'") + '\')">编辑</button><button class="btn-del" onclick="delFile(\'' + f.path.replace(/'/g,"\\'") + '\')">删除</button></div></div>'; }).join('');
 }
 
-function openFile(p) { document.getElementById('path-input').value = p; loadFile(p); closeModal(); }
+function openFile(p) { loadFile(p); closeModal(); }
 async function delFile(p) { if (!confirm('删除 ' + p + ' ？')) return; var r = await api(enc(p)); if (r.ok) { var sha = (await r.json()).sha; await api(enc(p), { method: 'DELETE', body: JSON.stringify({ message: 'Delete ' + p, sha: sha, branch: BRANCH }) }); allFiles = allFiles.filter(function(f){ return f.path !== p; }); renderList(); } }
-function createNew() { var p = document.getElementById('modal-new').value.trim(); if (!p) { alert('请输入路径'); return; } if (!p.endsWith('.md')) p += '.md'; document.getElementById('path-input').value = p; easyMDE.value(''); closeModal(); }
+function createNew() {
+  var p = document.getElementById('modal-new').value.trim();
+  if (!p) { alert('请输入路径'); return; }
+  if (!p.endsWith('.md')) p += '.md';
+  loadFile(p);
+  closeModal();
+}
 function closeModal() { document.getElementById('file-modal').style.display = 'none'; }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -211,8 +262,9 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('login-page').style.display = 'none';
       document.getElementById('editor-page').style.display = 'flex';
       initEditor();
+      loadFolders();
       var p = new URLSearchParams(location.search).get('path');
-      if (p) { document.getElementById('path-input').value = p; loadFile(p); }
+      if (p) loadFile(p);
     });
 });
 </script>
